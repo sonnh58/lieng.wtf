@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #0F0F23;
+    --color-surface: #1A1A35;
+    --color-surface-light: #252547;
+    --color-border: #2D2D5E;
+    --color-primary: #7C3AED;
+    --color-primary-glow: rgba(124, 58, 237, 0.4);
+    --color-accent: #F43F5E;
+    --color-gold: #FBBF24;
+    --color-gold-glow: rgba(251, 191, 36, 0.4);
+    --color-text: #E2E8F0;
+    --color-text-muted: #94A3B8;
+    --color-success: #22C55E;
+    --color-felt: #1B5E20;
+    --color-felt-light: #2E7D32;
+  }
+}
+
+/* Animation utilities */
+@layer utilities {
+  .animate-deal {
+    animation: dealCard 0.4s ease-out forwards;
+  }
+  .animate-deal-1 { animation-delay: 0ms; }
+  .animate-deal-2 { animation-delay: 150ms; }
+  .animate-deal-3 { animation-delay: 300ms; }
+
+  .animate-flip {
+    animation: flipCard 0.6s ease-in-out forwards;
+  }
+
+  /* 3D card flip: starts face-down (rotateY 180), flips to face-up (rotateY 0) */
+  .card-flip-container {
+    perspective: 600px;
+  }
+  .card-flip-inner {
+    transform-style: preserve-3d;
+    transform: rotateY(180deg);
+    transition: transform 0.5s ease-in-out;
+  }
+  .card-flip-inner.flipped {
+    transform: rotateY(0deg);
+  }
+  .card-flip-front,
+  .card-flip-back {
+    backface-visibility: hidden;
+    position: absolute;
+    inset: 0;
+  }
+  .card-flip-front {
+    transform: rotateY(0deg);
+  }
+  .card-flip-back {
+    transform: rotateY(180deg);
+  }
+
+  .animate-turn-glow {
+    animation: turnGlow 1.5s ease-in-out infinite;
+  }
+
+  .animate-winner {
+    animation: winnerPop 0.5s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out forwards;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px var(--color-primary-glow), 0 0 40px rgba(124, 58, 237, 0.15);
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 15px var(--color-gold-glow), 0 0 30px rgba(251, 191, 36, 0.15);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+  }
+
+  .text-glow-gold {
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+  }
+}
+
+@keyframes dealCard {
+  from { opacity: 0; transform: translateY(-30px) scale(0.8); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Card flies from center to player position using CSS custom properties (cqw/cqh) */
+@keyframes flyToPlayer {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.6) rotate(0deg);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(var(--fly-x), var(--fly-y)) scale(1) rotate(var(--fly-rot));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--fly-x), var(--fly-y)) scale(0.9) rotate(var(--fly-rot));
+  }
+}
+
+@keyframes flipCard {
+  0% { transform: rotateY(0deg); }
+  50% { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
+}
+
+@keyframes turnGlow {
+  0%, 100% { box-shadow: 0 0 8px var(--color-gold-glow); }
+  50% { box-shadow: 0 0 24px var(--color-gold-glow), 0 0 48px rgba(251, 191, 36, 0.15); }
+}
+
+@keyframes winnerPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); box-shadow: 0 0 24px var(--color-gold-glow); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Global */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  @apply h-full;
+}
+
+body {
+  font-family: 'Chakra Petch', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  @apply antialiased text-[--color-text];
+  background: var(--color-bg);
+  overscroll-behavior: none;
+}
+
+/* Number input cleanup */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* Safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

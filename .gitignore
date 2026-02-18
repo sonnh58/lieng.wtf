@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.db
+*.db-wal
+*.db-shm
+packages/server/data/*.db
+packages/server/data/*.db-wal
+packages/server/data/*.db-shm
