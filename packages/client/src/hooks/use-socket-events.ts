@@ -16,7 +16,7 @@ export function useSocketEvents() {
 
     let socket = getSocket();
     if (!socket) {
-      socket = connectSocket(playerName);
+      socket = connectSocket();
     }
 
     const onConnect = () => {

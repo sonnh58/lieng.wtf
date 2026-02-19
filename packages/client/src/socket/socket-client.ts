@@ -2,7 +2,7 @@ import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
-export function connectSocket(playerName: string): Socket {
+export function connectSocket(): Socket {
   if (socket?.connected) {
     return socket;
   }
@@ -17,8 +17,6 @@ export function connectSocket(playerName: string): Socket {
 
   socket.on('connect', () => {
     console.log('Socket connected:', socket?.id);
-    // Set player name on connection
-    socket?.emit('player:set-name', { name: playerName });
   });
 
   socket.on('disconnect', () => {

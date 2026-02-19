@@ -57,7 +57,7 @@ export function PlayerNameInput({ onNameSet }: PlayerNameInputProps) {
     // Send credential to server via socket
     let socket = getSocket();
     if (!socket) {
-      socket = connectSocket('google-pending');
+      socket = connectSocket();
     }
 
     const sendAuth = () => {
