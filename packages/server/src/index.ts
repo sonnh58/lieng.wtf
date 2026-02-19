@@ -7,16 +7,17 @@ import { initDatabase } from './database/db';
 import { deletePlayer } from './database/player-queries';
 import { setupSocketHandlers } from './socket/socket-handler';
 
-const PORT = 3001;
-const CLIENT_URL = 'http://localhost:5173';
+const PORT = parseInt(process.env.PORT || '3001');
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const CORS_ORIGINS = CLIENT_URL.split(',');
 
 const app = express();
-app.use(cors({ origin: CLIENT_URL }));
+app.use(cors({ origin: CORS_ORIGINS }));
 app.use(express.json());
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: CLIENT_URL, methods: ['GET', 'POST'] },
+  cors: { origin: CORS_ORIGINS, methods: ['GET', 'POST'] },
   connectionStateRecovery: {
     maxDisconnectionDuration: 60_000,
   },

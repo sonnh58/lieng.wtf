@@ -7,7 +7,8 @@ export function connectSocket(playerName: string): Socket {
     return socket;
   }
 
-  socket = io('http://localhost:3001', {
+  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+  socket = io(serverUrl, {
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionAttempts: 5,

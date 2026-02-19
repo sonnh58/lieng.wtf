@@ -147,7 +147,7 @@ export function PlayerNameInput({ onNameSet }: PlayerNameInputProps) {
             <>
               <div ref={googleBtnRef} className="w-full flex justify-center" />
               <p className="text-[--color-text-muted] text-xs text-center mt-3">
-                Dang nhap bang tai khoan @goonus.io
+                Dang nhap bang tai khoan gmail
               </p>
             </>
           )}
