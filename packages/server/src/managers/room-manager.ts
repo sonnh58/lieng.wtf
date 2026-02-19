@@ -78,8 +78,9 @@ export class RoomManager {
   joinRoom(roomId: string, playerId: string): Room {
     const room = this.rooms.get(roomId);
     if (!room) throw new Error('Room not found');
+    // Idempotent: if player already in room, just return it
+    if (room.players.includes(playerId)) return room;
     if (room.players.length >= room.config.maxPlayers) throw new Error('Room is full');
-    if (room.players.includes(playerId)) throw new Error('Already in room');
     room.players.push(playerId);
     return room;
   }

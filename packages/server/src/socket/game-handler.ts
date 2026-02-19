@@ -38,15 +38,16 @@ export function setupGameHandlers(
       return socket.emit('game:error', { message: 'Game already in progress' });
     }
 
+    // Clean stale players from room before starting (players whose session expired)
+    room.players = room.players.filter((pid) => playerManager.getByPlayerId(pid) !== null);
+    if (room.players.length < 2) return socket.emit('game:error', { message: 'Need at least 2 players' });
+
     // Reset and re-add players to game engine
     gm.clearPlayers();
     let addedCount = 0;
     room.players.forEach((playerId, index) => {
       const pInfo = playerManager.getByPlayerId(playerId);
-      if (!pInfo) {
-        console.warn(`[game:start] Player ${playerId} not found in PlayerManager — skipping`);
-        return;
-      }
+      if (!pInfo) return;
       addedCount++;
       gm!.addPlayer({
         id: playerId,

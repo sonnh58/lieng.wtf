@@ -54,6 +54,9 @@ export class PlayerManager {
       id = nanoid(10);
     }
 
+    // Clean up stale entry if same player re-registers with new socket
+    this.cleanupStalePlayer(id, socketId);
+
     const info: PlayerInfo = {
       id,
       socketId,
@@ -86,6 +89,9 @@ export class PlayerManager {
       id = nanoid(10);
     }
 
+    // Clean up stale entry if same player re-registers with new socket
+    this.cleanupStalePlayer(id, socketId);
+
     const info: PlayerInfo = {
       id,
       socketId,
@@ -97,6 +103,20 @@ export class PlayerManager {
     this.bySocket.set(socketId, info);
     this.playerToSocket.set(id, socketId);
     return info;
+  }
+
+  /** Cancel grace timer and remove old socket entry when same player re-registers */
+  private cleanupStalePlayer(playerId: string, newSocketId: string): void {
+    const oldSocketId = this.playerToSocket.get(playerId);
+    if (oldSocketId && oldSocketId !== newSocketId) {
+      // Cancel any pending grace timer
+      const timer = this.disconnectTimers.get(playerId);
+      if (timer) {
+        clearTimeout(timer);
+        this.disconnectTimers.delete(playerId);
+      }
+      this.bySocket.delete(oldSocketId);
+    }
   }
 
   getBySocket(socketId: string): PlayerInfo | null {

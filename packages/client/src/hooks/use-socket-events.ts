@@ -43,14 +43,24 @@ export function useSocketEvents() {
 
     // Reconnect failed — server expired our session, re-register
     const onReconnectFailed = () => {
+      const { authMethod } = useConnectionStore.getState();
       useConnectionStore.getState().setPlayerId('');
+      useConnectionStore.getState().setIsAdmin(false);
       useRoomStore.getState().setCurrentRoom(null);
-      socket!.emit('player:set-name', { name: playerName });
 
-      // Try rejoin room from URL hash after re-registering
-      const pendingRoomId = useRoomStore.getState().pendingRoomId;
-      if (pendingRoomId) {
-        socket!.emit('room:join', { roomId: pendingRoomId });
+      if (authMethod === 'google') {
+        // Google users must re-authenticate to restore isAdmin and identity
+        // Clear auth so login screen shows again
+        useConnectionStore.getState().clearConnection();
+        useConnectionStore.getState().setPlayerName('');
+      } else {
+        socket!.emit('player:set-name', { name: playerName });
+
+        // Try rejoin room from URL hash after re-registering
+        const pendingRoomId = useRoomStore.getState().pendingRoomId;
+        if (pendingRoomId) {
+          socket!.emit('room:join', { roomId: pendingRoomId });
+        }
       }
     };
 
