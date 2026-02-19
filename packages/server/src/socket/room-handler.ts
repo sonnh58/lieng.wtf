@@ -71,6 +71,14 @@ export function setupRoomHandlers(
     const player = playerManager.getBySocket(socket.id);
     if (!player) return socket.emit('room:error', { message: 'Set your name first' });
 
+    // Check wallet balance before creating room
+    if (db) {
+      const wallet = getWallet(db, player.id);
+      if (wallet <= 0) {
+        return socket.emit('room:error', { message: 'So du khong du, hay vay them chip' });
+      }
+    }
+
     // Auto-leave current room if already in one
     if (player.roomId) {
       const oldRoomId = player.roomId;
