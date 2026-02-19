@@ -52,6 +52,8 @@ export function PlayerNameInput({ onNameSet }: PlayerNameInputProps) {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
       setPlayerName(payload.name || payload.email);
       setAuthMethod('google');
+      // Cache credential for silent re-auth on reconnect
+      useConnectionStore.getState().setGoogleCredential(response.credential);
     } catch { /* socket handler will set name */ }
 
     // Send credential to server via socket
