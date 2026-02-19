@@ -43,16 +43,17 @@ export function setupRoomHandlers(
       }
 
       // Only allow @goonus.io emails
-      if (!email || !email.endsWith('@goonus.io')) {
-        return socket.emit('player:google-auth-error', { message: 'Chi cho phep email @goonus.io' });
-      }
+      // if (!email || !email.endsWith('@goonus.io')) {
+      //   return socket.emit('player:google-auth-error', { message: 'Chi cho phep email @goonus.io' });
+      // }
 
       // Register player with Google identity
-      const playerInfo = playerManager.registerGooglePlayer(socket.id, name, sub, picture ?? null);
+      const playerInfo = playerManager.registerGooglePlayer(socket.id, name, sub, picture ?? null, email);
       socket.emit('player:google-auth-success', {
         playerId: playerInfo.id,
         name: playerInfo.name,
         avatarUrl: picture ?? null,
+        isAdmin: playerInfo.isAdmin,
       });
     } catch (err: any) {
       console.error('Google auth error:', err);
@@ -129,7 +130,7 @@ export function setupRoomHandlers(
   // Admin: reset all rooms
   socket.on('admin:reset-rooms', () => {
     const player = playerManager.getBySocket(socket.id);
-    if (!player || player.name.toLowerCase() !== 'admin') {
+    if (!player || !player.isAdmin) {
       return socket.emit('room:error', { message: 'Unauthorized' });
     }
     const count = roomManager.resetAllRooms(io);

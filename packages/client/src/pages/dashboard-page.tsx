@@ -13,7 +13,7 @@ interface PlayerStats {
   created_at: string;
 }
 
-const API_URL = 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
 interface DashboardPageProps {
   onBack: () => void;
@@ -22,8 +22,7 @@ interface DashboardPageProps {
 export function DashboardPage({ onBack }: DashboardPageProps) {
   const [players, setPlayers] = useState<PlayerStats[]>([]);
   const [loading, setLoading] = useState(true);
-  const { playerName } = useConnectionStore();
-  const isAdmin = playerName?.toLowerCase() === 'admin';
+  const { isAdmin } = useConnectionStore();
 
   const fetchPlayers = async () => {
     try {

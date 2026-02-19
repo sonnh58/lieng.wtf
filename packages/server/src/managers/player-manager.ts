@@ -10,9 +10,15 @@ export interface PlayerInfo {
   name: string;
   roomId: string | null;
   connected: boolean;
+  isAdmin: boolean;
 }
 
 const DISCONNECT_GRACE_MS = 30_000;
+
+/** Admin email whitelist — these Google accounts get admin privileges */
+const ADMIN_EMAILS = new Set([
+  'son@goonus.io',
+]);
 
 /**
  * Maps socket IDs to player info. Handles disconnect/reconnect with grace period.
@@ -54,6 +60,7 @@ export class PlayerManager {
       name: sanitized,
       roomId: null,
       connected: true,
+      isAdmin: false,
     };
     this.bySocket.set(socketId, info);
     this.playerToSocket.set(id, socketId);
@@ -61,7 +68,7 @@ export class PlayerManager {
   }
 
   /** Register a Google-authenticated player */
-  registerGooglePlayer(socketId: string, name: string, googleSub: string, avatarUrl: string | null): PlayerInfo {
+  registerGooglePlayer(socketId: string, name: string, googleSub: string, avatarUrl: string | null, email?: string): PlayerInfo {
     const sanitized = sanitizeName(name);
 
     let id: string;
@@ -85,6 +92,7 @@ export class PlayerManager {
       name: sanitized,
       roomId: null,
       connected: true,
+      isAdmin: email ? ADMIN_EMAILS.has(email.toLowerCase()) : false,
     };
     this.bySocket.set(socketId, info);
     this.playerToSocket.set(id, socketId);

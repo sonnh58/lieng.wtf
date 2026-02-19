@@ -7,7 +7,7 @@ import type { Room, Card, GamePhase } from '@lieng/shared';
 import { showToast } from '../components/toast-notification';
 
 export function useSocketEvents() {
-  const { playerName, playerId: storedPlayerId, setConnected, setPlayerId, setPlayerName, setAvatarUrl } = useConnectionStore();
+  const { playerName, playerId: storedPlayerId, setConnected, setPlayerId, setPlayerName, setAvatarUrl, setIsAdmin } = useConnectionStore();
   const { setRooms, setCurrentRoom, updateRoom } = useRoomStore();
   const { setMyCards, updateGameState, setPhase, setCurrentTurn, setTurnTimeLeft, setShowdownResults, setWalletStats } = useGameStore();
 
@@ -117,10 +117,11 @@ export function useSocketEvents() {
     const onChipsGranted = ({ amount }: { amount: number }) => showToast(`Da nhan ${amount} chips!`, 'success');
 
     // Google auth events
-    const onGoogleAuthSuccess = ({ playerId, name, avatarUrl }: { playerId: string; name: string; avatarUrl: string | null }) => {
+    const onGoogleAuthSuccess = ({ playerId, name, avatarUrl, isAdmin }: { playerId: string; name: string; avatarUrl: string | null; isAdmin?: boolean }) => {
       setPlayerId(playerId);
       setPlayerName(name);
       if (avatarUrl) setAvatarUrl(avatarUrl);
+      if (isAdmin) setIsAdmin(true);
 
       // Fetch wallet balance
       socket!.emit('wallet:get');

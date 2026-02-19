@@ -7,11 +7,13 @@ interface ConnectionState {
   playerName: string | null;
   avatarUrl: string | null;
   authMethod: 'name' | 'google' | null;
+  isAdmin: boolean;
   setConnected: (connected: boolean) => void;
   setPlayerId: (playerId: string) => void;
   setPlayerName: (name: string) => void;
   setAvatarUrl: (url: string | null) => void;
   setAuthMethod: (method: 'name' | 'google') => void;
+  setIsAdmin: (isAdmin: boolean) => void;
   clearConnection: () => void;
 }
 
@@ -23,12 +25,14 @@ export const useConnectionStore = create<ConnectionState>()(
       playerName: null,
       avatarUrl: null,
       authMethod: null,
+      isAdmin: false,
       setConnected: (connected) => set({ connected }),
       setPlayerId: (playerId) => set({ playerId }),
       setPlayerName: (name) => set({ playerName: name || null }),
       setAvatarUrl: (url) => set({ avatarUrl: url }),
       setAuthMethod: (method) => set({ authMethod: method }),
-      clearConnection: () => set({ connected: false, playerId: null, playerName: null, avatarUrl: null, authMethod: null }),
+      setIsAdmin: (isAdmin) => set({ isAdmin }),
+      clearConnection: () => set({ connected: false, playerId: null, playerName: null, avatarUrl: null, authMethod: null, isAdmin: false }),
     }),
     {
       name: 'lieng-connection',
@@ -37,6 +41,7 @@ export const useConnectionStore = create<ConnectionState>()(
         playerId: state.playerId,
         avatarUrl: state.avatarUrl,
         authMethod: state.authMethod,
+        isAdmin: state.isAdmin,
       }),
     }
   )

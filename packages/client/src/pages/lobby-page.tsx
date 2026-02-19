@@ -7,8 +7,6 @@ import { CreateRoomDialog } from '../components/create-room-dialog';
 import { getSocket, disconnectSocket } from '../socket/socket-client';
 import { showToast } from '../components/toast-notification';
 
-const ADMIN_NAME = 'admin';
-
 interface LobbyPageProps {
   onEnterGame: () => void;
   onDashboard: () => void;
@@ -17,7 +15,7 @@ interface LobbyPageProps {
 export function LobbyPage({ onEnterGame, onDashboard }: LobbyPageProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { rooms, currentRoom } = useRoomStore();
-  const { playerName, avatarUrl } = useConnectionStore();
+  const { playerName, avatarUrl, isAdmin } = useConnectionStore();
   const { walletBalance, totalLoaned, totalPnl } = useGameStore();
   const socket = getSocket();
 
@@ -30,8 +28,6 @@ export function LobbyPage({ onEnterGame, onDashboard }: LobbyPageProps) {
   useEffect(() => {
     if (currentRoom) onEnterGame();
   }, [currentRoom, onEnterGame]);
-
-  const isAdmin = playerName?.toLowerCase() === ADMIN_NAME;
 
   const handleLogout = () => {
     disconnectSocket();
