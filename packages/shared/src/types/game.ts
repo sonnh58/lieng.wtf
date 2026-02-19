@@ -22,6 +22,8 @@ export interface HandResult {
   points: number;
   /** Highest card for tiebreaking */
   highCard: Card;
+  /** Whether all 3 cards share the same suit */
+  isSuited: boolean;
 }
 
 export enum BettingAction {

@@ -38,6 +38,11 @@ export function isDi(cards: Card[]): boolean {
   );
 }
 
+/** All three cards share the same suit */
+export function isSuited(cards: Card[]): boolean {
+  return cards[0].suit === cards[1].suit && cards[1].suit === cards[2].suit;
+}
+
 /** Get highest card by rank, then by suit hierarchy for tiebreaker */
 export function getHighCard(cards: Card[]): Card {
   return cards.reduce((highest, card) => {

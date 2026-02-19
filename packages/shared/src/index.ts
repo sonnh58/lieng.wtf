@@ -22,9 +22,11 @@ export {
   DEFAULT_MAX_BET,
   DEFAULT_STARTING_CHIPS,
   DEFAULT_ROOM_CONFIG,
+  SAP_BONUS_MULTIPLIER,
+  SUITED_LIENG_BONUS_MULTIPLIER,
 } from './constants/game-config';
 
 // Utils
 export { createDeck, shuffleDeck, dealCards } from './utils/deck';
-export { calculatePoints, isSap, isLieng, isDi, getHighCard } from './utils/hand-utils';
+export { calculatePoints, isSap, isLieng, isDi, isSuited, getHighCard } from './utils/hand-utils';
 export { evaluateHand, compareHands } from './utils/hand-evaluator';

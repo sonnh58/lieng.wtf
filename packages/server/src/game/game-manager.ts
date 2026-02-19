@@ -3,7 +3,10 @@ import {
   GamePhase,
   BettingAction,
   PlayerState,
+  HandType,
   CARDS_PER_HAND,
+  SAP_BONUS_MULTIPLIER,
+  SUITED_LIENG_BONUS_MULTIPLIER,
   createDeck,
   shuffleDeck,
   dealCards,
@@ -256,17 +259,60 @@ export class GameManager extends EventEmitter {
     for (const [id, p] of this.players) chipMap.set(id, p.chips);
     const payouts = this.potManager.distributeToWinners(winners, chipMap);
 
-    // Apply payouts
+    // Apply pot payouts
     for (const [id, amount] of payouts) {
       const player = this.players.get(id);
       if (player) player.chips += amount;
     }
+
+    // Apply SAP / suited LIENG bonus: each opponent pays fixed penalty to holder
+    this.applyHandBonuses(activePlayers, hands, payouts);
 
     const result: RoundResult = { winners, hands, payouts };
     this.emit('roundEnd', result);
 
     // Cleanup and prepare for next round
     this.endRound();
+  }
+
+  /**
+   * Apply bonus penalties for SAP (×4 ante) and suited LIENG (×3 ante).
+   * Each opponent pays the bonus holder directly. Chips can go below 0.
+   * Mutates player.chips and the payouts map.
+   */
+  private applyHandBonuses(
+    activePlayers: string[],
+    hands: Map<string, HandResult>,
+    payouts: Map<string, number>,
+  ): void {
+    const ante = this.config.ante;
+
+    for (const holderId of activePlayers) {
+      const hand = hands.get(holderId);
+      if (!hand) continue;
+
+      let multiplier = 0;
+      if (hand.type === HandType.SAP) {
+        multiplier = SAP_BONUS_MULTIPLIER;
+      } else if (hand.type === HandType.LIENG && hand.isSuited) {
+        multiplier = SUITED_LIENG_BONUS_MULTIPLIER;
+      }
+      if (multiplier === 0) continue;
+
+      const bonusPerOpponent = ante * multiplier;
+
+      // Collect from ALL other players in the round (including folded)
+      for (const [opponentId] of this.players) {
+        if (opponentId === holderId) continue;
+        const opponent = this.players.get(opponentId)!;
+        opponent.chips -= bonusPerOpponent;
+        payouts.set(opponentId, (payouts.get(opponentId) ?? 0) - bonusPerOpponent);
+
+        const holder = this.players.get(holderId)!;
+        holder.chips += bonusPerOpponent;
+        payouts.set(holderId, (payouts.get(holderId) ?? 0) + bonusPerOpponent);
+      }
+    }
   }
 
   private determineWinners(

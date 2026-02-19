@@ -9,6 +9,11 @@ export const DEFAULT_MIN_BET = 10;
 export const DEFAULT_MAX_BET = 1000;
 export const DEFAULT_STARTING_CHIPS = 1000;
 
+/** Bonus multiplier: SAP holder collects ante × this from each opponent */
+export const SAP_BONUS_MULTIPLIER = 4;
+/** Bonus multiplier: Suited LIENG holder collects ante × this from each opponent */
+export const SUITED_LIENG_BONUS_MULTIPLIER = 3;
+
 export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   maxPlayers: MAX_PLAYERS,
   ante: DEFAULT_ANTE,

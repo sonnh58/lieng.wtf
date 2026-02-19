@@ -3,7 +3,7 @@ import type { Card } from '../types/card';
 import type { HandResult } from '../types/game';
 import { SUIT_HIERARCHY } from '../constants/card-values';
 import { Rank } from '../types/card';
-import { isSap, isLieng, isDi, calculatePoints, getHighCard } from './hand-utils';
+import { isSap, isLieng, isDi, isSuited, calculatePoints, getHighCard } from './hand-utils';
 
 /** Numeric rank for HandType comparison (higher = stronger) */
 const HAND_TYPE_RANK: Record<HandType, number> = {
@@ -16,23 +16,25 @@ const HAND_TYPE_RANK: Record<HandType, number> = {
 /** Evaluate a 3-card hand and return its result */
 export function evaluateHand(cards: Card[]): HandResult {
   const highCard = getHighCard(cards);
+  const suited = isSuited(cards);
 
   if (isSap(cards)) {
-    return { type: HandType.SAP, points: 0, highCard };
+    return { type: HandType.SAP, points: 0, highCard, isSuited: suited };
   }
 
   if (isLieng(cards)) {
-    return { type: HandType.LIENG, points: 0, highCard };
+    return { type: HandType.LIENG, points: 0, highCard, isSuited: suited };
   }
 
   if (isDi(cards)) {
-    return { type: HandType.DI, points: 0, highCard };
+    return { type: HandType.DI, points: 0, highCard, isSuited: suited };
   }
 
   return {
     type: HandType.NORMAL,
     points: calculatePoints(cards),
     highCard,
+    isSuited: suited,
   };
 }
 
