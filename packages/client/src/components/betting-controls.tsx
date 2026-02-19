@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BettingAction } from '@lieng/shared';
 import { getSocket } from '../socket/socket-client';
 import { formatChips } from '../utils/format-chips';
@@ -15,12 +15,17 @@ interface BettingControlsProps {
 export function BettingControls({
   currentBet, myChips, myCurrentBet, minRaise, disabled = false, allowAllIn = true,
 }: BettingControlsProps) {
-  const [raiseInput, setRaiseInput] = useState(String(minRaise));
   const socket = getSocket();
 
   const callAmount = currentBet - myCurrentBet;
+  // Minimum total to raise = currentBet + minRaise; increment = that minus what we already bet
+  const minRaiseIncrement = currentBet + minRaise - myCurrentBet;
+  const [raiseInput, setRaiseInput] = useState(String(minRaiseIncrement));
+  // Sync default input when bet state changes (e.g. opponent raises)
+  useEffect(() => { setRaiseInput(String(minRaiseIncrement)); }, [minRaiseIncrement]);
+
   const canCall = callAmount > 0 && myChips >= callAmount;
-  const canRaise = myChips > callAmount + minRaise;
+  const canRaise = myChips > minRaiseIncrement;
   const canCheck = currentBet === myCurrentBet;
 
   const emit = (action: BettingAction, amount?: number) => {
@@ -53,16 +58,16 @@ export function BettingControls({
             value={raiseInput}
             onChange={(e) => setRaiseInput(e.target.value)}
             onBlur={() => {
-              const val = parseInt(raiseInput) || minRaise;
-              setRaiseInput(String(Math.max(minRaise, Math.min(val, myChips - callAmount))));
+              const val = parseInt(raiseInput) || minRaiseIncrement;
+              setRaiseInput(String(Math.max(minRaiseIncrement, Math.min(val, myChips))));
             }}
-            min={minRaise}
-            max={myChips - callAmount}
+            min={minRaiseIncrement}
+            max={myChips}
             className="w-12 px-1 py-1 bg-[--color-bg] text-[--color-text] rounded border border-[--color-border] focus:outline-none focus:border-[--color-primary] text-xs text-center"
           />
           <button
-            onClick={() => { const amt = parseInt(raiseInput) || 0; if (amt >= minRaise) emit(BettingAction.TO, myCurrentBet + amt); }}
-            disabled={disabled || (parseInt(raiseInput) || 0) < minRaise}
+            onClick={() => { const amt = parseInt(raiseInput) || 0; if (amt >= minRaiseIncrement) emit(BettingAction.TO, myCurrentBet + amt); }}
+            disabled={disabled || (parseInt(raiseInput) || 0) < minRaiseIncrement}
             className={`flex-1 ${btnClass} bg-[--color-success] hover:brightness-110 active:brightness-90 disabled:opacity-40 text-white`}
           >
             To

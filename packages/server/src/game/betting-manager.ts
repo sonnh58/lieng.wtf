@@ -41,17 +41,25 @@ export class BettingManager {
         }
         return { valid: true };
 
-      case BettingAction.TO:
-        if (!amount || amount < this.currentBet + this.minRaise) {
+      case BettingAction.TO: {
+        const minTotal = this.currentBet + this.minRaise;
+        if (!amount || amount < minTotal) {
           return {
             valid: false,
-            reason: `Raise must be at least ${this.currentBet + this.minRaise}`,
+            reason: `To toi thieu ${minTotal}`,
+          };
+        }
+        if (amount % this.minRaise !== 0) {
+          return {
+            valid: false,
+            reason: `So to phai la boi so cua ${this.minRaise}`,
           };
         }
         if (player.chips < amount - playerCurrentBet) {
-          return { valid: false, reason: 'Not enough chips to raise' };
+          return { valid: false, reason: 'Khong du chip de to' };
         }
         return { valid: true };
+      }
 
       case BettingAction.TO_TAT:
         return { valid: true };
@@ -85,9 +93,8 @@ export class BettingManager {
       case BettingAction.TO: {
         const raiseAmount = amount! - playerCurrentBet;
         this.playerBets.set(player.id, amount!);
-        const prevBet = this.currentBet;
         this.currentBet = amount!;
-        this.minRaise = amount! - prevBet + this.minRaise;
+        // minRaise stays fixed (= minBet), no poker-style escalation
         return { chipsDelta: raiseAmount, isRaise: true };
       }
 
