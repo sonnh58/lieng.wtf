@@ -1,251 +1,159 @@
 # Deployment Guide - Lieng 2026
 
-## Prerequisites
+## Production Setup
 
-- **Bun** >= 1.0 (runtime for server + package manager)
-- **Node.js** >= 18 (optional, for `node dist/` fallback)
-- A Linux/macOS server (VPS, cloud instance, etc.)
+- **Server:** `34.87.161.209` (Ubuntu 24.04, GCP)
+- **User:** `sonmh`
+- **Domain:** `lieng.wtf`
+- **Stack:** Bun + PM2 + Nginx
+- **SSH Key:** `~/.ssh/lieng-deploy`
 
 ## Architecture
 
 ```
-Client (React + Vite)     Server (Express + Socket.IO + SQLite)
-     :5173  ──────────────>  :3001
-  Static files              WebSocket + REST API
-  (Nginx / CDN)             (Bun runtime)
-                             └── data/lieng.db (SQLite)
+                    lieng.wtf (port 80/443)
+                         │
+                      [Nginx]
+                       /    \
+            Static files    Proxy
+           /                     \
+  Client (Vite build)     Server (Bun + Express)
+  ~/lieng-2026/            ~/lieng-2026/
+  packages/client/dist/    packages/server/src/
+                           :3001 (Socket.IO + REST)
+                           └── data/lieng.db (SQLite)
 ```
 
-## 1. Local Development
+## Quick Deploy
+
+After code changes, run from project root:
 
 ```bash
-# Install dependencies
+./deploy.sh
+```
+
+This script:
+1. Uploads source files via SCP
+2. Installs deps + builds client on server
+3. Restarts PM2 server process
+4. Verifies health endpoint
+
+## Environment Variables
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `PORT` | `3001` | Server port |
+| `CLIENT_URL` | `https://lieng.wtf,http://lieng.wtf` | CORS origins (comma-separated) |
+| `VITE_SERVER_URL` | `https://lieng.wtf` | Client socket connection URL (build-time) |
+
+Configured in `~/lieng-2026/ecosystem.config.cjs` on server.
+
+## Manual Deploy Steps
+
+### 1. Upload Files
+
+```bash
+KEY="~/.ssh/lieng-deploy"
+SERVER="sonmh@34.87.161.209"
+
+scp -i $KEY -r packages/shared/src $SERVER:~/lieng-2026/packages/shared/
+scp -i $KEY -r packages/server/src $SERVER:~/lieng-2026/packages/server/
+scp -i $KEY -r packages/client/src $SERVER:~/lieng-2026/packages/client/
+# + package.json, tsconfig files, vite.config.ts, etc.
+```
+
+### 2. Build Client on Server
+
+```bash
+ssh -i $KEY $SERVER << 'EOF'
+export PATH="$HOME/.bun/bin:$PATH"
+cd ~/lieng-2026/packages/client
+VITE_SERVER_URL="https://lieng.wtf" bun run build
+chmod -R 755 dist
+EOF
+```
+
+### 3. Restart Server
+
+```bash
+ssh -i $KEY $SERVER "pm2 restart lieng-server"
+```
+
+## Local Development
+
+```bash
 bun install
-
-# Start both client + server (dev mode with hot reload)
-bun run dev
-
-# Or separately:
+bun run dev          # Both client + server
 bun run dev:client   # Vite at http://localhost:5173
 bun run dev:server   # Server at http://localhost:3001
 ```
 
-## 2. Build for Production
+## Server Management
 
-### Client
-
-```bash
-cd packages/client
-bun run build
-# Output: packages/client/dist/
-```
-
-### Server
-
-Server runs directly with Bun (no build step needed):
+### PM2 Commands
 
 ```bash
-bun packages/server/src/index.ts
+ssh -i ~/.ssh/lieng-deploy sonmh@34.87.161.209
+
+pm2 list                    # Process status
+pm2 logs lieng-server       # View logs
+pm2 restart lieng-server    # Restart
+pm2 stop lieng-server       # Stop
+pm2 monit                   # Live monitoring
 ```
 
-Or with TypeScript compilation:
+### Nginx
 
 ```bash
-cd packages/server
-bun run build          # Output: packages/server/dist/
-node dist/index.js     # Run with Node.js
+sudo nginx -t                  # Test config
+sudo systemctl reload nginx    # Reload
+sudo tail -f /var/log/nginx/error.log
 ```
 
-## 3. Environment Configuration
+Config: `/etc/nginx/sites-available/lieng.wtf`
 
-The server currently uses hardcoded values. For production, set these via environment variables:
+### SSL
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3001` | Server HTTP/WebSocket port |
-| `CLIENT_URL` | `http://localhost:5173` | CORS allowed origin |
+Domain behind Cloudflare — use **Cloudflare SSL** (Full mode) instead of certbot.
 
-To enable env vars, update `packages/server/src/index.ts`:
-
-```ts
-const PORT = parseInt(process.env.PORT ?? '3001');
-const CLIENT_URL = process.env.CLIENT_URL ?? 'http://localhost:5173';
-```
-
-## 4. Deploy: Single VPS (Recommended)
-
-### Step 1: Setup Server
-
+If DNS points directly to server (no Cloudflare proxy):
 ```bash
-# SSH into your VPS
-ssh user@your-server
-
-# Install Bun
-curl -fsSL https://bun.sh/install | bash
-
-# Clone and install
-git clone <your-repo-url> lieng-2026
-cd lieng-2026
-bun install
+sudo certbot --nginx -d lieng.wtf
 ```
 
-### Step 2: Build Client
+## SQLite Database
 
-```bash
-cd packages/client
-bun run build
-```
-
-### Step 3: Run Server with PM2 or systemd
-
-**Option A: PM2**
-
-```bash
-bun add -g pm2
-pm2 start --interpreter bun packages/server/src/index.ts --name lieng-server
-pm2 save
-pm2 startup
-```
-
-**Option B: systemd**
-
-Create `/etc/systemd/system/lieng.service`:
-
-```ini
-[Unit]
-Description=Lieng Card Game Server
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/path/to/lieng-2026
-ExecStart=/home/user/.bun/bin/bun packages/server/src/index.ts
-Restart=always
-RestartSec=5
-Environment=PORT=3001
-Environment=CLIENT_URL=https://yourdomain.com
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable lieng
-sudo systemctl start lieng
-```
-
-### Step 4: Nginx Reverse Proxy
-
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
-
-    # Serve client static files
-    root /path/to/lieng-2026/packages/client/dist;
-    index index.html;
-
-    # SPA fallback
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Proxy WebSocket + API to server
-    location /socket.io/ {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /health {
-        proxy_pass http://127.0.0.1:3001;
-    }
-}
-```
-
-```bash
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-### Step 5: SSL with Certbot
-
-```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d yourdomain.com
-```
-
-## 5. SQLite Database
-
-- **Location:** `packages/server/data/lieng.db`
-- **Mode:** WAL (Write-Ahead Logging) for concurrent reads
+- **Location:** `~/lieng-2026/packages/server/data/lieng.db`
 - Auto-created on first server start
-- Tables: `players`, `rooms`, `game_history`
+- WAL mode for concurrent reads
 
 ### Backup
 
 ```bash
-# Hot backup (safe while server is running thanks to WAL mode)
-sqlite3 packages/server/data/lieng.db ".backup /path/to/backup.db"
-
-# Or simple file copy (stop server first for guaranteed consistency)
-cp packages/server/data/lieng.db /path/to/backup.db
+sqlite3 ~/lieng-2026/packages/server/data/lieng.db ".backup /tmp/lieng-backup.db"
 ```
 
-### Reset Database
+### Reset
 
 ```bash
-rm packages/server/data/lieng.db
-# Restart server — tables are auto-recreated
-```
-
-## 6. Health Check
-
-```bash
-curl http://localhost:3001/health
-# {"status":"ok","maxPlayers":6}
-```
-
-## 7. Monitoring
-
-```bash
-# PM2 logs
-pm2 logs lieng-server
-
-# systemd logs
-journalctl -u lieng -f
-
-# Check DB size
-ls -lh packages/server/data/lieng.db
-```
-
-## 8. Update / Redeploy
-
-```bash
-cd /path/to/lieng-2026
-git pull
-
-# Rebuild client
-cd packages/client && bun run build
-
-# Restart server
+rm ~/lieng-2026/packages/server/data/lieng.db
 pm2 restart lieng-server
-# or
-sudo systemctl restart lieng
+```
+
+## Health Check
+
+```bash
+curl https://lieng.wtf/health
+# {"status":"ok","maxPlayers":12}
 ```
 
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
-| CORS errors | Ensure `CLIENT_URL` matches your actual domain (with protocol) |
-| WebSocket fails | Verify Nginx has `proxy_set_header Upgrade` and `Connection "upgrade"` |
-| DB locked errors | Check only one server process is running |
-| Client shows blank | Ensure Nginx `try_files` has SPA fallback to `/index.html` |
-| Port in use | `lsof -i :3001` to find conflicting process |
+| CORS errors | Check `CLIENT_URL` in `ecosystem.config.cjs` |
+| WebSocket fails | Verify Nginx `/socket.io/` proxy config has Upgrade headers |
+| 500 on client | Run `chmod -R 755 ~/lieng-2026/packages/client/dist` |
+| DB locked | Ensure single server process: `pm2 list` |
+| Client blank page | Nginx `try_files` needs SPA fallback to `/index.html` |
+| Port in use | `lsof -i :3001` to find conflict |
