@@ -36,6 +36,18 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
     }
   };
 
+  const handleResetAllStats = async () => {
+    if (!confirm('Reset tat ca diem va vi cua moi nguoi choi? Hanh dong nay khong the hoan tac!')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/reset-all-stats`, { method: 'POST' });
+      if (res.ok) {
+        fetchPlayers();
+      }
+    } catch (err) {
+      console.error('Failed to reset stats:', err);
+    }
+  };
+
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Xoa nguoi choi "${name}"?`)) return;
     try {
@@ -71,6 +83,14 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
               </p>
             </div>
             <div className="flex gap-2">
+              {isAdmin && (
+                <button
+                  onClick={handleResetAllStats}
+                  className="bg-[--color-accent] hover:brightness-110 active:brightness-90 text-white font-semibold py-2 px-3 rounded-lg transition-all min-h-[40px] cursor-pointer text-sm"
+                >
+                  Reset tat ca
+                </button>
+              )}
               <button
                 onClick={fetchPlayers}
                 className="bg-[--color-surface-light] hover:brightness-125 border border-[--color-border] text-[--color-text] font-semibold py-2 px-3 rounded-lg transition-all min-h-[40px] cursor-pointer text-sm"

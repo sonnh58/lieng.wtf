@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { MAX_PLAYERS } from '@lieng/shared';
 import { initDatabase } from './database/db';
-import { deletePlayer } from './database/player-queries';
+import { deletePlayer, resetAllPlayersStats } from './database/player-queries';
 import { setupSocketHandlers } from './socket/socket-handler';
 
 const PORT = parseInt(process.env.PORT || '3001');
@@ -48,6 +48,13 @@ app.delete('/api/players/:id', (req, res) => {
   } else {
     res.status(404).json({ error: 'Player not found' });
   }
+});
+
+// Admin: reset all players' wallets and stats
+app.post('/api/admin/reset-all-stats', (_req, res) => {
+  const count = resetAllPlayersStats(db);
+  console.log(`Admin reset all stats for ${count} players`);
+  res.json({ success: true, playersReset: count });
 });
 
 // Wire up all socket handlers

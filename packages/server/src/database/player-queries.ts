@@ -70,6 +70,14 @@ export function getPlayerStats(db: Database, id: string): {
   return { wins: row.wins, losses: row.losses, totalLoaned: row.total_loaned, totalPnl: row.total_pnl, walletBalance: row.chips };
 }
 
+/** Reset all players' chips, total_loaned, total_pnl, wins, losses */
+export function resetAllPlayersStats(db: Database): number {
+  const result = db.query(
+    'UPDATE players SET chips = 0, total_loaned = 0, total_pnl = 0, wins = 0, losses = 0',
+  ).run();
+  return result.changes;
+}
+
 /** Delete a player by ID */
 export function deletePlayer(db: Database, id: string): boolean {
   const result = db.query('DELETE FROM players WHERE id = ?').run(id);
