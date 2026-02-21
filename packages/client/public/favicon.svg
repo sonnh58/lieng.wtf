@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a472a"/>
+      <stop offset="100%" style="stop-color:#0d2b19"/>
+    </linearGradient>
+    <linearGradient id="card1g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5f0e8"/>
+      <stop offset="100%" style="stop-color:#e8dfc8"/>
+    </linearGradient>
+    <linearGradient id="card2g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#faf7f0"/>
+      <stop offset="100%" style="stop-color:#ede4ce"/>
+    </linearGradient>
+    <linearGradient id="card3g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#f0e8d4"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background circle -->
+  <rect width="32" height="32" rx="6" fill="url(#bg)"/>
+
+  <!-- Decorative border -->
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5" fill="none" stroke="#d4af37" stroke-width="0.6" opacity="0.6"/>
+
+  <!-- Card 1 (leftmost, rotated -15deg) -->
+  <g transform="translate(16,17) rotate(-15) translate(-16,-17)" filter="url(#shadow)">
+    <rect x="6" y="7" width="13" height="18" rx="1.5" fill="url(#card1g)"/>
+    <rect x="6" y="7" width="13" height="18" rx="1.5" fill="none" stroke="#d4af37" stroke-width="0.4"/>
+    <!-- Heart suit -->
+    <text x="9.5" y="13" font-family="serif" font-size="5" fill="#c0392b" text-anchor="middle">♥</text>
+    <text x="9.5" y="18" font-family="serif" font-size="3.5" fill="#c0392b" text-anchor="middle">A</text>
+  </g>
+
+  <!-- Card 2 (center, straight) -->
+  <g transform="translate(16,16)" filter="url(#shadow)">
+    <rect x="-6.5" y="-9.5" width="13" height="18" rx="1.5" fill="url(#card2g)"/>
+    <rect x="-6.5" y="-9.5" width="13" height="18" rx="1.5" fill="none" stroke="#d4af37" stroke-width="0.4"/>
+    <!-- Spade suit -->
+    <text x="0" y="-3.5" font-family="serif" font-size="5" fill="#1a1a1a" text-anchor="middle">♠</text>
+    <text x="0" y="2" font-family="serif" font-size="3.5" fill="#1a1a1a" text-anchor="middle">K</text>
+  </g>
+
+  <!-- Card 3 (rightmost, rotated +15deg) -->
+  <g transform="translate(16,17) rotate(15) translate(-16,-17)" filter="url(#shadow)">
+    <rect x="13" y="7" width="13" height="18" rx="1.5" fill="url(#card3g)"/>
+    <rect x="13" y="7" width="13" height="18" rx="1.5" fill="none" stroke="#d4af37" stroke-width="0.4"/>
+    <!-- Diamond suit -->
+    <text x="19.5" y="13" font-family="serif" font-size="5" fill="#c0392b" text-anchor="middle">♦</text>
+    <text x="19.5" y="18" font-family="serif" font-size="3.5" fill="#c0392b" text-anchor="middle">Q</text>
+  </g>
+
+  <!-- Gold accent dots -->
+  <circle cx="5" cy="5" r="1" fill="#d4af37" opacity="0.7"/>
+  <circle cx="27" cy="27" r="1" fill="#d4af37" opacity="0.7"/>
+</svg>
