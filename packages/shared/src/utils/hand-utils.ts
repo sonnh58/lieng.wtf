@@ -43,6 +43,21 @@ export function isSuited(cards: Card[]): boolean {
   return cards[0].suit === cards[1].suit && cards[1].suit === cards[2].suit;
 }
 
+/** Get card with highest suit, then highest rank as tiebreaker (for NORMAL hand comparison) */
+export function getBestSuitCard(cards: Card[]): Card {
+  return cards.reduce((best, card) => {
+    const suitA = SUIT_HIERARCHY[best.suit];
+    const suitB = SUIT_HIERARCHY[card.suit];
+    if (suitB > suitA) return card;
+    if (suitB === suitA) {
+      const rankA = best.rank === Rank.ACE ? 14 : best.rank;
+      const rankB = card.rank === Rank.ACE ? 14 : card.rank;
+      if (rankB > rankA) return card;
+    }
+    return best;
+  });
+}
+
 /** Get highest card by rank, then by suit hierarchy for tiebreaker */
 export function getHighCard(cards: Card[]): Card {
   return cards.reduce((highest, card) => {

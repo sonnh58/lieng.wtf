@@ -20,8 +20,10 @@ export interface HandResult {
   type: HandType;
   /** Point value 0-9 (only relevant for NORMAL hands) */
   points: number;
-  /** Highest card for tiebreaking */
+  /** Highest card by rank for tiebreaking (SAP/LIENG/DI) */
   highCard: Card;
+  /** Card with highest suit, then rank — for NORMAL tiebreaker */
+  bestSuitCard: Card;
   /** Whether all 3 cards share the same suit */
   isSuited: boolean;
 }

@@ -28,5 +28,5 @@ export {
 
 // Utils
 export { createDeck, shuffleDeck, dealCards } from './utils/deck';
-export { calculatePoints, isSap, isLieng, isDi, isSuited, getHighCard } from './utils/hand-utils';
+export { calculatePoints, isSap, isLieng, isDi, isSuited, getHighCard, getBestSuitCard } from './utils/hand-utils';
 export { evaluateHand, compareHands } from './utils/hand-evaluator';

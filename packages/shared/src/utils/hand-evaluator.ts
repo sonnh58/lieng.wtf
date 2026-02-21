@@ -3,7 +3,7 @@ import type { Card } from '../types/card';
 import type { HandResult } from '../types/game';
 import { SUIT_HIERARCHY } from '../constants/card-values';
 import { Rank } from '../types/card';
-import { isSap, isLieng, isDi, isSuited, calculatePoints, getHighCard } from './hand-utils';
+import { isSap, isLieng, isDi, isSuited, calculatePoints, getHighCard, getBestSuitCard } from './hand-utils';
 
 /** Numeric rank for HandType comparison (higher = stronger) */
 const HAND_TYPE_RANK: Record<HandType, number> = {
@@ -16,24 +16,26 @@ const HAND_TYPE_RANK: Record<HandType, number> = {
 /** Evaluate a 3-card hand and return its result */
 export function evaluateHand(cards: Card[]): HandResult {
   const highCard = getHighCard(cards);
+  const bestSuitCard = getBestSuitCard(cards);
   const suited = isSuited(cards);
 
   if (isSap(cards)) {
-    return { type: HandType.SAP, points: 0, highCard, isSuited: suited };
+    return { type: HandType.SAP, points: 0, highCard, bestSuitCard, isSuited: suited };
   }
 
   if (isLieng(cards)) {
-    return { type: HandType.LIENG, points: 0, highCard, isSuited: suited };
+    return { type: HandType.LIENG, points: 0, highCard, bestSuitCard, isSuited: suited };
   }
 
   if (isDi(cards)) {
-    return { type: HandType.DI, points: 0, highCard, isSuited: suited };
+    return { type: HandType.DI, points: 0, highCard, bestSuitCard, isSuited: suited };
   }
 
   return {
     type: HandType.NORMAL,
     points: calculatePoints(cards),
     highCard,
+    bestSuitCard,
     isSuited: suited,
   };
 }
@@ -66,9 +68,13 @@ export function compareHands(a: HandResult, b: HandResult): number {
     return compareCards(a.highCard, b.highCard);
   }
 
-  // NORMAL: compare points, then suit of high card
+  // NORMAL: compare points, then best suit card (suit first, then rank)
   if (a.points !== b.points) return b.points - a.points;
-  return SUIT_HIERARCHY[b.highCard.suit] - SUIT_HIERARCHY[a.highCard.suit];
+  const suitDiff = SUIT_HIERARCHY[b.bestSuitCard.suit] - SUIT_HIERARCHY[a.bestSuitCard.suit];
+  if (suitDiff !== 0) return suitDiff;
+  const rankA = a.bestSuitCard.rank === Rank.ACE ? 14 : a.bestSuitCard.rank;
+  const rankB = b.bestSuitCard.rank === Rank.ACE ? 14 : b.bestSuitCard.rank;
+  return rankB - rankA;
 }
 
 /** Compare Sáp rank (A-A-A is highest) */
