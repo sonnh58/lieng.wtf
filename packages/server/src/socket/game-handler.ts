@@ -173,7 +173,8 @@ function setupGameEvents(
       try {
         db.transaction(() => {
           const winnerSet = new Set(result.winners as string[]);
-          for (const [id] of result.hands) {
+          // Track wins/losses for ALL players (including folded)
+          for (const [id] of gm.getPlayers()) {
             if (winnerSet.has(id)) {
               incrementWins(db!, id);
             } else {
@@ -181,12 +182,10 @@ function setupGameEvents(
             }
           }
 
-          // Update wallet + PnL for each player
-          const ante = room.config.ante;
-          for (const [id] of result.hands) {
+          // Update wallet + PnL for ALL players (including folded)
+          for (const [id, player] of gm.getPlayers()) {
             const payout = payoutsObj[id] ?? 0;
-            const player = gm.getPlayers().get(id);
-            const totalBet = player?.bet ?? ante;
+            const totalBet = player.bet ?? 0;
             // Net P&L: payout - what they put in
             const netPnl = payout - totalBet;
             if (netPnl !== 0) {
