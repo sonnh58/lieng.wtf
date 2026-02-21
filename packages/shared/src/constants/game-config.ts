@@ -6,7 +6,7 @@ export const CARDS_PER_HAND = 3;
 export const DEFAULT_TURN_TIMER = 60; // seconds
 export const DEFAULT_ANTE = 10;
 export const DEFAULT_MIN_BET = 10;
-export const DEFAULT_MAX_BET = 1000;
+export const DEFAULT_MAX_BET = 50;
 export const DEFAULT_STARTING_CHIPS = 1000;
 
 /** Bonus multiplier: SAP holder collects ante × this from each opponent */
