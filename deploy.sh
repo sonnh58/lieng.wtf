@@ -29,6 +29,7 @@ scp $SSH_OPTS "$BASE/packages/server/package.json" "$BASE/packages/server/tsconf
 
 # Client package
 scp $SSH_OPTS -r "$BASE/packages/client/src" "$SERVER:$REMOTE_DIR/packages/client/"
+[ -d "$BASE/packages/client/public" ] && scp $SSH_OPTS -r "$BASE/packages/client/public" "$SERVER:$REMOTE_DIR/packages/client/"
 for f in package.json tsconfig.json tsconfig.app.json vite.config.ts index.html postcss.config.js tailwind.config.js .env; do
   [ -f "$BASE/packages/client/$f" ] && scp $SSH_OPTS "$BASE/packages/client/$f" "$SERVER:$REMOTE_DIR/packages/client/"
 done
