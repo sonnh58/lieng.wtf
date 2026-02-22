@@ -366,9 +366,12 @@ export class GameManager extends EventEmitter {
     this.emit('phaseChange', phase);
   }
 
-  /** Restart turn timer after deserialization (called on server restore) */
-  resumeTurnTimer(): void {
-    if (this.phase === GamePhase.BETTING && this.turnManager) {
+  /** Resume game after deserialization (called on server restore) */
+  resumeAfterRestore(): void {
+    if (this.phase === GamePhase.DEALING && this.turnManager) {
+      // Skip deal animation, go straight to betting
+      this.startBetting();
+    } else if (this.phase === GamePhase.BETTING && this.turnManager) {
       this.startTurnTimer();
       this.emit('turnChange', this.turnManager.getCurrentPlayer());
     }

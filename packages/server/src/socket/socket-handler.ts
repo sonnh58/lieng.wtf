@@ -24,8 +24,8 @@ export function setupSocketHandlers(io: Server, db?: Database): void {
     const restoredGames = roomManager.restoreGameStates();
     for (const { roomId, gm } of restoredGames) {
       setupGameEvents(gm, roomId, io, roomManager, playerManager, db);
-      // Resume turn timer if game was in betting phase
-      gm.resumeTurnTimer();
+      // Resume game (handles both DEALING and BETTING phases)
+      gm.resumeAfterRestore();
     }
   }
 
@@ -44,6 +44,9 @@ export function setupSocketHandlers(io: Server, db?: Database): void {
       const reconnected = playerManager.handleReconnect(socket.id, playerId);
       if (reconnected?.roomId) {
         socket.join(reconnected.roomId);
+
+        // Re-add player to room.players (empty after server restart)
+        try { roomManager.joinRoom(reconnected.roomId, playerId); } catch { /* full or missing */ }
 
         const room = roomManager.getRoom(reconnected.roomId);
         if (room) {
