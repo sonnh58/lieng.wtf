@@ -69,6 +69,10 @@ export class GameManager extends EventEmitter {
     this.players.clear();
   }
 
+  setDealerIndex(index: number): void {
+    this.dealerIndex = index;
+  }
+
   removePlayer(playerId: string): void {
     const player = this.players.get(playerId);
 
@@ -143,7 +147,7 @@ export class GameManager extends EventEmitter {
     playerId: string,
     action: BettingAction,
     amount?: number,
-  ): { success: boolean; reason?: string } {
+  ): { success: boolean; reason?: string; chipsDelta?: number } {
     if (this.phase !== GamePhase.BETTING || !this.turnManager || !this.bettingManager) {
       return { success: false, reason: 'Not in betting phase' };
     }
@@ -185,7 +189,7 @@ export class GameManager extends EventEmitter {
     this.emit('playerAction', playerId, action, result.chipsDelta);
     this.advanceTurn();
 
-    return { success: true };
+    return { success: true, chipsDelta: result.chipsDelta };
   }
 
   /** Get game state filtered for a specific player (only sees own cards) */
@@ -360,5 +364,66 @@ export class GameManager extends EventEmitter {
   private setPhase(phase: GamePhase): void {
     this.phase = phase;
     this.emit('phaseChange', phase);
+  }
+
+  /** Restart turn timer after deserialization (called on server restore) */
+  resumeTurnTimer(): void {
+    if (this.phase === GamePhase.BETTING && this.turnManager) {
+      this.startTurnTimer();
+      this.emit('turnChange', this.turnManager.getCurrentPlayer());
+    }
+  }
+
+  /** Serialize full game state to a JSON-safe object */
+  serialize(): object {
+    return {
+      phase: this.phase,
+      dealerIndex: this.dealerIndex,
+      roundNumber: this.roundNumber,
+      deck: this.deck,
+      players: Array.from(this.players.values()).map((p) => ({
+        id: p.id,
+        name: p.name,
+        chips: p.chips,
+        bet: p.bet,
+        state: p.state,
+        seatIndex: p.seatIndex,
+        cards: p.cards,
+      })),
+      turn: this.turnManager?.serialize() ?? null,
+      betting: this.bettingManager?.serialize() ?? null,
+      pot: this.potManager.serialize(),
+    };
+  }
+
+  /** Restore a GameManager from a serialized snapshot */
+  static deserialize(snapshot: any, config: RoomConfig): GameManager {
+    const gm = new GameManager(config);
+    gm.phase = snapshot.phase as GamePhase;
+    gm.dealerIndex = snapshot.dealerIndex;
+    gm.roundNumber = snapshot.roundNumber;
+    gm.deck = snapshot.deck ?? [];
+
+    for (const p of snapshot.players) {
+      gm.players.set(p.id, {
+        id: p.id,
+        name: p.name,
+        chips: p.chips,
+        bet: p.bet,
+        state: p.state as PlayerState,
+        seatIndex: p.seatIndex,
+        cards: p.cards ?? [],
+      });
+    }
+
+    if (snapshot.turn) {
+      gm.turnManager = TurnManager.fromSnapshot(snapshot.turn);
+    }
+    if (snapshot.betting) {
+      gm.bettingManager = BettingManager.fromSnapshot(snapshot.betting);
+    }
+    gm.potManager = PotManager.fromSnapshot(snapshot.pot);
+
+    return gm;
   }
 }

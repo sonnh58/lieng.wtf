@@ -33,6 +33,12 @@ CREATE TABLE IF NOT EXISTS game_history (
 );
 
 CREATE INDEX IF NOT EXISTS idx_game_history_room_id ON game_history (room_id);
+
+CREATE TABLE IF NOT EXISTS game_state (
+  room_id TEXT PRIMARY KEY,
+  state TEXT NOT NULL,
+  updated_at TEXT DEFAULT (datetime('now'))
+);
 `;
 
 /** Run CREATE TABLE IF NOT EXISTS for all tables */

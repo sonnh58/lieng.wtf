@@ -6,6 +6,7 @@ import type { PlayerManager } from '../managers/player-manager';
 import type { GameManager } from '../game/game-manager';
 import { incrementWins, incrementLosses, updateWallet, updatePnl, getWallet } from '../database/player-queries';
 import { saveRound } from '../database/history-queries';
+import { saveGameState, deleteGameState } from '../database/game-state-queries';
 
 /**
  * Handles game action socket events: start, action, ready.
@@ -60,7 +61,13 @@ export function setupGameHandlers(
       });
     });
 
-    console.log(`[game:start] Room ${room.id}: ${room.players.length} in room, ${addedCount} added to game engine`);
+    // Set dealer to the host (winner of previous round)
+    const hostSeatIndex = room.players.indexOf(room.hostId);
+    if (hostSeatIndex >= 0) {
+      gm.setDealerIndex(hostSeatIndex);
+    }
+
+    console.log(`[game:start] Room ${room.id}: ${room.players.length} in room, ${addedCount} added to game engine, dealer=${hostSeatIndex}`);
     const started = gm.startRound();
     if (!started) {
       console.warn(`[game:start] startRound() returned false — addedCount=${addedCount}, players in GM:`, Array.from(gm.getPlayers().keys()));
@@ -69,6 +76,7 @@ export function setupGameHandlers(
 
     // Broadcast DEALING phase state (no cards yet)
     broadcastGameState(gm, room.id, io, room.players, playerManager);
+    persistState(gm, room.id, db);
 
     // After short delay: send cards, then transition to BETTING
     const DEAL_ANIMATION_MS = 1500;
@@ -85,6 +93,7 @@ export function setupGameHandlers(
       // Transition to BETTING phase
       gm!.startBetting();
       broadcastGameState(gm!, room.id, io, room.players, playerManager);
+      persistState(gm!, room.id, db);
     }, DEAL_ANIMATION_MS);
   });
 
@@ -101,16 +110,17 @@ export function setupGameHandlers(
       return socket.emit('game:error', { message: result.reason });
     }
 
-    // Broadcast action to room
+    // Broadcast action to room (show only the chips spent this action, not cumulative)
     const room = roomManager.getRoom(player.roomId)!;
     io.to(room.id).emit('game:action-result', {
       playerId: player.id,
       action,
-      amount: amount ?? 0,
+      amount: result.chipsDelta ?? 0,
     });
 
     // Broadcast updated state
     broadcastGameState(gm, room.id, io, room.players, playerManager);
+    persistState(gm, room.id, db);
   });
 
   // Player ready for next round
@@ -125,7 +135,7 @@ export function setupGameHandlers(
 }
 
 /** Set up GameManager event listeners for broadcasting */
-function setupGameEvents(
+export function setupGameEvents(
   gm: GameManager,
   roomId: string,
   io: Server,
@@ -207,6 +217,13 @@ function setupGameEvents(
       }
     }
 
+    // Round complete — remove persisted state
+    if (db) {
+      try { deleteGameState(db, roomId); } catch (err) {
+        console.error('Failed to delete game state:', err);
+      }
+    }
+
     // Transfer deal rights to winner for next round
     if (result.winners.length > 0 && room.players.includes(result.winners[0])) {
       room.hostId = result.winners[0];
@@ -231,6 +248,16 @@ function setupGameEvents(
   gm.on('phaseChange', (phase: string) => {
     io.to(roomId).emit('game:phase', { phase });
   });
+}
+
+/** Persist game state to SQLite */
+function persistState(gm: GameManager, roomId: string, db?: Database): void {
+  if (!db) return;
+  try {
+    saveGameState(db, roomId, JSON.stringify(gm.serialize()));
+  } catch (err) {
+    console.error('Failed to persist game state:', err);
+  }
 }
 
 /** Send filtered game state to each player individually */

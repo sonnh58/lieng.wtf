@@ -21,8 +21,8 @@ export class TurnManager {
   ) {
     this.playerIds = playerIds;
     this.turnTimerSeconds = turnTimer;
-    // Start from player left of dealer
-    this.currentIndex = (dealerIndex + 1) % playerIds.length;
+    // Dealer goes first
+    this.currentIndex = dealerIndex;
   }
 
   getCurrentPlayer(): string {
@@ -105,5 +105,40 @@ export class TurnManager {
 
   destroy(): void {
     this.clearTimer();
+  }
+
+  serialize(): {
+    playerIds: string[];
+    currentIndex: number;
+    foldedPlayers: string[];
+    allInPlayers: string[];
+    actedPlayers: string[];
+    turnTimerSeconds: number;
+  } {
+    return {
+      playerIds: this.playerIds,
+      currentIndex: this.currentIndex,
+      foldedPlayers: Array.from(this.foldedPlayers),
+      allInPlayers: Array.from(this.allInPlayers),
+      actedPlayers: Array.from(this.actedPlayers),
+      turnTimerSeconds: this.turnTimerSeconds,
+    };
+  }
+
+  static fromSnapshot(snapshot: {
+    playerIds: string[];
+    currentIndex: number;
+    foldedPlayers: string[];
+    allInPlayers: string[];
+    actedPlayers: string[];
+    turnTimerSeconds: number;
+  }): TurnManager {
+    // Use dummy dealerIndex=0; we override currentIndex directly
+    const tm = new TurnManager(snapshot.playerIds, 0, snapshot.turnTimerSeconds);
+    tm.currentIndex = snapshot.currentIndex;
+    for (const id of snapshot.foldedPlayers) tm.foldedPlayers.add(id);
+    for (const id of snapshot.allInPlayers) tm.allInPlayers.add(id);
+    for (const id of snapshot.actedPlayers) tm.actedPlayers.add(id);
+    return tm;
   }
 }

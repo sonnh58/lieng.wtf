@@ -4,6 +4,7 @@ import type { Room, RoomConfig } from '@lieng/shared';
 import type { Database } from 'bun:sqlite';
 import { GameManager } from '../game/game-manager';
 import { saveRoom, updateRoomHost, deleteRoom, loadAllRooms } from '../database/room-queries';
+import { loadAllGameStates, deleteGameState } from '../database/game-state-queries';
 
 export interface RoomSummary {
   id: string;
@@ -53,6 +54,40 @@ export class RoomManager {
     if (restored > 0) {
       console.log(`Restored ${restored} room(s) from database`);
     }
+  }
+
+  /**
+   * Restore active game states from DB.
+   * Call after loadFromDb(). Returns restored room IDs for event wiring.
+   */
+  restoreGameStates(): { roomId: string; gm: GameManager }[] {
+    if (!this.db) return [];
+    const rows = loadAllGameStates(this.db);
+    const restored: { roomId: string; gm: GameManager }[] = [];
+
+    for (const { roomId, state } of rows) {
+      const room = this.rooms.get(roomId);
+      if (!room) {
+        // Room no longer exists — clean up stale state
+        deleteGameState(this.db!, roomId);
+        continue;
+      }
+
+      try {
+        const snapshot = JSON.parse(state);
+        const gm = GameManager.deserialize(snapshot, room.config);
+        this.games.set(roomId, gm);
+        restored.push({ roomId, gm });
+      } catch (err) {
+        console.warn(`Skipping game state for room ${roomId}: invalid snapshot`);
+        deleteGameState(this.db!, roomId);
+      }
+    }
+
+    if (restored.length > 0) {
+      console.log(`Restored ${restored.length} active game(s) from database`);
+    }
+    return restored;
   }
 
   createRoom(name: string, hostId: string, config?: Partial<RoomConfig>): Room {

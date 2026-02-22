@@ -3,7 +3,7 @@ import type { Database } from 'bun:sqlite';
 import { RoomManager } from '../managers/room-manager';
 import { PlayerManager } from '../managers/player-manager';
 import { setupRoomHandlers } from './room-handler';
-import { setupGameHandlers } from './game-handler';
+import { setupGameHandlers, setupGameEvents } from './game-handler';
 import { applyRateLimiter } from '../middleware/rate-limiter';
 
 /** Singleton managers shared across all connections */
@@ -18,9 +18,15 @@ export function setupSocketHandlers(io: Server, db?: Database): void {
   roomManager = new RoomManager(db);
   playerManager = new PlayerManager(db);
 
-  // Restore rooms from DB on startup
+  // Restore rooms and active games from DB on startup
   if (db) {
     roomManager.loadFromDb();
+    const restoredGames = roomManager.restoreGameStates();
+    for (const { roomId, gm } of restoredGames) {
+      setupGameEvents(gm, roomId, io, roomManager, playerManager, db);
+      // Resume turn timer if game was in betting phase
+      gm.resumeTurnTimer();
+    }
   }
 
   io.on('connection', (socket) => {

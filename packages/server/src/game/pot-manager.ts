@@ -74,4 +74,16 @@ export class PotManager {
   reset(): void {
     this.contributions.clear();
   }
+
+  serialize(): { contributions: [string, number][] } {
+    return { contributions: Array.from(this.contributions.entries()) };
+  }
+
+  static fromSnapshot(snapshot: { contributions: [string, number][] }): PotManager {
+    const pm = new PotManager();
+    for (const [id, amount] of snapshot.contributions) {
+      pm.contributions.set(id, amount);
+    }
+    return pm;
+  }
 }

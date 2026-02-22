@@ -143,4 +143,32 @@ export class BettingManager {
     this.currentBet = 0;
     this.playerBets.clear();
   }
+
+  serialize(): {
+    currentBet: number;
+    minRaise: number;
+    ante: number;
+    playerBets: [string, number][];
+  } {
+    return {
+      currentBet: this.currentBet,
+      minRaise: this.minRaise,
+      ante: this.ante,
+      playerBets: Array.from(this.playerBets.entries()),
+    };
+  }
+
+  static fromSnapshot(snapshot: {
+    currentBet: number;
+    minRaise: number;
+    ante: number;
+    playerBets: [string, number][];
+  }): BettingManager {
+    const bm = new BettingManager(snapshot.ante, snapshot.minRaise);
+    bm.currentBet = snapshot.currentBet;
+    for (const [id, amount] of snapshot.playerBets) {
+      bm.playerBets.set(id, amount);
+    }
+    return bm;
+  }
 }
