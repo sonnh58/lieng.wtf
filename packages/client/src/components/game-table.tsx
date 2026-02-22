@@ -133,22 +133,14 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
                 currentBet={currentBet}
                 myChips={myPlayer.chips}
                 myCurrentBet={myPlayer.bet || 0}
-                minRaise={currentBet || 10}
+                minRaise={currentRoom?.config?.minBet || 10}
                 allowAllIn={currentRoom?.config?.allowAllIn !== false}
               />
             )}
 
             {isBettingPhase && !isMyTurn && myPlayer && myPlayer.state === PlayerState.PLAYING && (
-              <div className="flex flex-col gap-1.5">
-                <button
-                  onClick={() => getSocket()?.emit('game:action', { action: BettingAction.BO })}
-                  className="w-full font-bold py-2 rounded-lg bg-[--color-accent] hover:brightness-110 active:brightness-90 text-white text-xs min-h-[36px] cursor-pointer"
-                >
-                  Bo
-                </button>
-                <div className="text-center text-[--color-text-muted] text-xs">
-                  Cho luot...
-                </div>
+              <div className="text-center text-[--color-text-muted] text-xs py-2">
+                Cho luot...
               </div>
             )}
           </div>
