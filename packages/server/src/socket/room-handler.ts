@@ -130,6 +130,13 @@ export function setupRoomHandlers(
       socket.join(room.id);
       socket.emit('room:joined', { room, playerId: player.id });
       socket.to(room.id).emit('room:updated', { room });
+
+      // Send current game state if a round is active (spectator mode)
+      const gm = roomManager.getGameManager(roomId);
+      if (gm) {
+        const state = gm.getStateForPlayer(player.id);
+        socket.emit('game:state', state);
+      }
     } catch (err: any) {
       socket.emit('room:error', { message: err.message });
     }
@@ -169,7 +176,7 @@ export function setupRoomHandlers(
     socket.emit('wallet:chips-granted', { amount });
   });
 
-  // Kick player (host only)
+  // Kick player from current round (host only). Player stays in room for next round.
   socket.on('room:kick', ({ targetPlayerId }: { targetPlayerId: string }) => {
     const player = playerManager.getBySocket(socket.id);
     if (!player?.roomId) return socket.emit('room:error', { message: 'Not in a room' });
@@ -180,25 +187,23 @@ export function setupRoomHandlers(
     if (targetPlayerId === player.id) return socket.emit('room:error', { message: 'Khong the kick chinh minh' });
     if (!room.players.includes(targetPlayerId)) return socket.emit('room:error', { message: 'Nguoi choi khong trong phong' });
 
-    // Remove from game if active
+    // Fold player out of current round (stays in room)
     const gm = roomManager.getGameManager(room.id);
     if (gm) gm.removePlayer(targetPlayerId);
 
-    // Remove from room
-    const targetSocketId = playerManager.getSocketId(targetPlayerId);
-    roomManager.leaveRoom(room.id, targetPlayerId);
-    playerManager.setPlayerRoom(targetSocketId ?? '', null);
-
     // Notify kicked player
+    const targetSocketId = playerManager.getSocketId(targetPlayerId);
     if (targetSocketId) {
-      io.to(targetSocketId).emit('room:kicked');
-      io.sockets.sockets.get(targetSocketId)?.leave(room.id);
+      io.to(targetSocketId).emit('room:kicked-from-round');
     }
 
-    // Broadcast updated room
-    const updatedRoom = roomManager.getRoom(room.id);
-    if (updatedRoom) {
-      io.to(room.id).emit('room:updated', { room: updatedRoom });
+    // Broadcast updated game state
+    if (gm) {
+      for (const pid of room.players) {
+        const sid = playerManager.getSocketId(pid);
+        if (!sid) continue;
+        io.to(sid).emit('game:state', gm.getStateForPlayer(pid));
+      }
     }
   });
 
