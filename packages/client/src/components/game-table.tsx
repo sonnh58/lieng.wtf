@@ -20,6 +20,7 @@ interface GameTableProps {
 export function GameTable({ players, dealerIndex }: GameTableProps) {
   const { playerId } = useConnectionStore();
   const { currentRoom } = useRoomStore();
+  const socket = getSocket();
   const {
     phase, myCards, pot, currentBet, currentTurn,
     turnTimeLeft, showdownResults, round, setShowdownResults,
@@ -63,6 +64,12 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
   const myPlayer = players.find((p) => p.id === playerId);
   const isBettingPhase = phase === 'BETTING';
   const isDealingPhase = phase === 'DEALING';
+  const isHost = currentRoom?.hostId === playerId;
+
+  const handleKick = (targetPlayerId: string) => {
+    if (!confirm('Kick nguoi choi nay?')) return;
+    socket?.emit('room:kick', { targetPlayerId });
+  };
 
   const getPlayerPosition = (index: number, total: number) => {
     const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
@@ -113,6 +120,8 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
                 showCards={phase === 'SHOWDOWN' || player.id === playerId}
                 isMe={player.id === playerId}
                 lastAction={playerActions[player.id]}
+                canKick={isHost && player.id !== playerId}
+                onKick={handleKick}
               />
             </div>
           ))}

@@ -14,6 +14,9 @@ interface PlayerSeatProps {
   isMe?: boolean;
   /** Last action taken by this player */
   lastAction?: { action: string; amount?: number };
+  /** Show kick button (host only, not self) */
+  canKick?: boolean;
+  onKick?: (playerId: string) => void;
 }
 
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {
@@ -24,7 +27,7 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export function PlayerSeat({
-  player, isCurrentTurn, isDealer, turnTimeLeft, showCards = false, isMe = false, lastAction,
+  player, isCurrentTurn, isDealer, turnTimeLeft, showCards = false, isMe = false, lastAction, canKick = false, onKick,
 }: PlayerSeatProps) {
   const isFolded = player.state === PlayerState.FOLDED;
   const isAllIn = player.state === PlayerState.ALL_IN;
@@ -64,6 +67,17 @@ export function PlayerSeat({
           <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-[--color-gold] text-[--color-bg] text-[9px] sm:text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border border-yellow-600">
             D
           </div>
+        )}
+
+        {/* Kick button (host only) */}
+        {canKick && (
+          <button
+            onClick={() => onKick?.(player.id)}
+            className="absolute -top-1.5 -left-1.5 sm:-top-2 sm:-left-2 bg-red-600 hover:bg-red-500 text-white text-[9px] sm:text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border border-red-800 cursor-pointer z-10"
+            title="Kick"
+          >
+            X
+          </button>
         )}
 
         {/* Name + countdown number */}
