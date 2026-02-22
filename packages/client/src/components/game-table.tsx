@@ -8,6 +8,8 @@ import { BettingControls } from './betting-controls';
 import { ShowdownResult } from './showdown-result';
 import { GameStatusBar } from './game-status-bar';
 import { DealingAnimation } from './dealing-animation';
+import { EmojiPicker } from './emoji-picker';
+import { FloatingEmoji, useFloatingEmoji } from './floating-emoji';
 import { useRoomStore } from '../stores/room-store';
 import { PlayerState, BettingAction } from '@lieng/shared';
 import { getSocket } from '../socket/socket-client';
@@ -28,6 +30,18 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
   } = useGameStore();
   const [flipReveal, setFlipReveal] = useState(false);
   const prevCardsLen = useRef(0);
+  const { entries: emojiEntries, addEmoji } = useFloatingEmoji();
+
+  // Listen for emoji events
+  useEffect(() => {
+    if (!socket) return;
+    const onEmoji = ({ playerId: pid, emoji }: { playerId: string; emoji: string }) => {
+      const name = players.find((p) => p.id === pid)?.name ?? '';
+      addEmoji(emoji, name);
+    };
+    socket.on('game:emoji', onEmoji);
+    return () => { socket.off('game:emoji', onEmoji); };
+  }, [socket, players, addEmoji]);
 
   // Trigger flip reveal when cards are first received
   useEffect(() => {
@@ -97,6 +111,7 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
           style={{ background: 'radial-gradient(ellipse at center, #2E7D32 0%, #1B5E20 60%, #0D3B0F 100%)' }}
         >
           <PotDisplay amount={pot} />
+          <FloatingEmoji entries={emojiEntries} />
 
           {/* Flying cards animation during dealing */}
           {isDealingPhase && (
@@ -181,6 +196,11 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
               <HandDisplay cards={myCards} size="lg" flipReveal={flipReveal} />
             </div>
           )}
+
+          {/* Emoji picker */}
+          <div className="shrink-0">
+            <EmojiPicker />
+          </div>
         </div>
       </div>
 

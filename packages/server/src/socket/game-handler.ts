@@ -123,6 +123,15 @@ export function setupGameHandlers(
     persistState(gm, room.id, db);
   });
 
+  // Emoji taunt — broadcast to room
+  socket.on('game:emoji', ({ emoji }: { emoji: string }) => {
+    const player = playerManager.getBySocket(socket.id);
+    if (!player?.roomId) return;
+    // Limit to single emoji (max 2 codepoints)
+    if (!emoji || emoji.length > 4) return;
+    io.to(player.roomId).emit('game:emoji', { playerId: player.id, emoji });
+  });
+
   // Player ready for next round
   socket.on('player:ready', () => {
     const player = playerManager.getBySocket(socket.id);

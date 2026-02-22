@@ -140,6 +140,15 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes emojiFloat {
+  0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -80px) scale(1.3); }
+}
+
+.animate-emoji-float {
+  animation: emojiFloat 2s ease-out forwards;
+}
+
 /* Global */
 * {
   -webkit-tap-highlight-color: transparent;
