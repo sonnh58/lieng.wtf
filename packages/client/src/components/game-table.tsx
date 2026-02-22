@@ -79,6 +79,20 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
   const isBettingPhase = phase === 'BETTING';
   const isDealingPhase = phase === 'DEALING';
   const isHost = currentRoom?.hostId === playerId;
+  const [preFold, setPreFold] = useState(false);
+
+  // Auto-fold when my turn comes and pre-fold is checked
+  useEffect(() => {
+    if (preFold && isMyTurn && isBettingPhase && myPlayer?.state === PlayerState.PLAYING) {
+      socket?.emit('game:action', { action: BettingAction.BO });
+      setPreFold(false);
+    }
+  }, [preFold, isMyTurn, isBettingPhase, myPlayer?.state]);
+
+  // Reset pre-fold when round ends
+  useEffect(() => {
+    if (phase === 'WAITING' || phase === 'DEALING') setPreFold(false);
+  }, [phase]);
 
   const handleKick = (targetPlayerId: string) => {
     if (!confirm('Kick nguoi choi nay?')) return;
@@ -165,9 +179,17 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
             )}
 
             {isBettingPhase && !isMyTurn && myPlayer && myPlayer.state === PlayerState.PLAYING && (
-              <div className="text-center text-[--color-text-muted] text-xs py-2">
-                Cho luot...
-              </div>
+              <label className="flex items-center gap-2 py-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={preFold}
+                  onChange={(e) => setPreFold(e.target.checked)}
+                  className="w-4 h-4 accent-[--color-accent] cursor-pointer"
+                />
+                <span className={`text-xs font-semibold ${preFold ? 'text-[--color-accent]' : 'text-[--color-text-muted]'}`}>
+                  Bo luot
+                </span>
+              </label>
             )}
           </div>
 
