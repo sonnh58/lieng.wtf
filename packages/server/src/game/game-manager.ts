@@ -70,13 +70,20 @@ export class GameManager extends EventEmitter {
   }
 
   removePlayer(playerId: string): void {
-    this.players.delete(playerId);
-    if (this.turnManager && this.phase === GamePhase.BETTING) {
+    const player = this.players.get(playerId);
+
+    // During active round: fold but keep in players map so roundEnd updates their wallet
+    if (player && this.turnManager && (this.phase === GamePhase.BETTING || this.phase === GamePhase.DEALING)) {
+      player.state = PlayerState.FOLDED;
       this.turnManager.foldPlayer(playerId);
       if (this.turnManager.getCurrentPlayer() === playerId) {
         this.advanceTurn();
       }
+      return; // Don't delete — roundEnd will process their loss
     }
+
+    // No active round: safe to remove immediately
+    this.players.delete(playerId);
   }
 
   /** Start a new round: collect antes, shuffle, deal (stays in DEALING phase) */
@@ -144,28 +151,7 @@ export class GameManager extends EventEmitter {
     const player = this.players.get(playerId);
     if (!player) return { success: false, reason: 'Player not found' };
 
-    // Allow folding out of turn; other actions require turn
-    if (action === BettingAction.BO) {
-      if (player.state !== PlayerState.PLAYING) {
-        return { success: false, reason: 'Cannot fold' };
-      }
-      const wasCurrentTurn = this.turnManager.getCurrentPlayer() === playerId;
-      player.state = PlayerState.FOLDED;
-      this.turnManager.foldPlayer(playerId);
-      this.emit('playerAction', playerId, action, 0);
-
-      if (wasCurrentTurn) {
-        // Was their turn — advance normally
-        this.advanceTurn();
-      } else if (this.turnManager.isRoundComplete()) {
-        // Out-of-turn fold caused round to end (e.g. only 1 player left)
-        this.resolveRound();
-      }
-      // Otherwise: broadcast updated state but don't touch turn order
-      return { success: true };
-    }
-
-    // Non-fold actions require it to be player's turn
+    // All actions require it to be player's turn
     if (this.turnManager.getCurrentPlayer() !== playerId) {
       return { success: false, reason: 'Not your turn' };
     }
@@ -183,7 +169,10 @@ export class GameManager extends EventEmitter {
     player.bet += result.chipsDelta;
     this.potManager.addBet(playerId, result.chipsDelta);
 
-    if (action === BettingAction.TO_TAT) {
+    if (action === BettingAction.BO) {
+      player.state = PlayerState.FOLDED;
+      this.turnManager.foldPlayer(playerId);
+    } else if (action === BettingAction.TO_TAT) {
       player.state = PlayerState.ALL_IN;
       this.turnManager!.allInPlayer(playerId);
     }
