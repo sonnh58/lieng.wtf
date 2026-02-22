@@ -77,12 +77,10 @@ export function useSocketEvents() {
       useGameStore.getState().setPhase('WAITING' as any);
     };
     const onRoomUpdated = ({ room }: { room: Room }) => updateRoom(room);
-    const onRoomKicked = () => {
-      useRoomStore.getState().setCurrentRoom(null);
-      useGameStore.getState().setShowdownResults(null);
+    const onRoomKickedFromRound = () => {
+      // Clear game state but stay in room
       useGameStore.getState().setMyCards([]);
-      useGameStore.getState().setPhase('WAITING' as any);
-      showToast('Ban da bi kick khoi phong', 'error');
+      showToast('Ban da bi kick khoi van nay', 'error');
     };
     const onRoomError = ({ message }: { message: string }) => showToast(message, 'error');
 
@@ -163,7 +161,7 @@ export function useSocketEvents() {
     socket.on('room:list', onRoomList);
     socket.on('room:joined', onRoomJoined);
     socket.on('room:updated', onRoomUpdated);
-    socket.on('room:kicked', onRoomKicked);
+    socket.on('room:kicked-from-round', onRoomKickedFromRound);
     socket.on('room:error', onRoomError);
     socket.on('game:dealt', onDealt);
     socket.on('game:state', onGameState);
@@ -190,7 +188,7 @@ export function useSocketEvents() {
       socket!.off('room:list', onRoomList);
       socket!.off('room:joined', onRoomJoined);
       socket!.off('room:updated', onRoomUpdated);
-      socket!.off('room:kicked', onRoomKicked);
+      socket!.off('room:kicked-from-round', onRoomKickedFromRound);
       socket!.off('room:error', onRoomError);
       socket!.off('game:dealt', onDealt);
       socket!.off('game:state', onGameState);
