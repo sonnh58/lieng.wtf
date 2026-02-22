@@ -9,7 +9,7 @@ import { showToast } from '../components/toast-notification';
 export function useSocketEvents() {
   const { playerName, playerId: storedPlayerId, setConnected, setPlayerId, setPlayerName, setAvatarUrl, setIsAdmin } = useConnectionStore();
   const { setRooms, setCurrentRoom, updateRoom } = useRoomStore();
-  const { setMyCards, updateGameState, setPhase, setCurrentTurn, setTurnTimeLeft, setShowdownResults, setWalletStats } = useGameStore();
+  const { setMyCards, updateGameState, setPhase, setCurrentTurn, setTurnTimeLeft, setShowdownResults, setWalletStats, setPlayerAction, clearPlayerActions } = useGameStore();
 
   useEffect(() => {
     if (!playerName) return;
@@ -96,10 +96,14 @@ export function useSocketEvents() {
       });
       if (state.currentPlayer) setCurrentTurn(state.currentPlayer);
     };
+    const onActionResult = ({ playerId, action, amount }: { playerId: string; action: string; amount?: number }) => {
+      setPlayerAction(playerId, { action, amount });
+    };
     const onGamePhase = ({ phase }: { phase: GamePhase }) => {
       setPhase(phase);
       if (phase === 'DEALING') {
-        // New round starting — hide showdown results immediately
+        // New round starting — clear action badges and showdown results
+        clearPlayerActions();
         useGameStore.getState().setShowdownResults(null);
       }
       if (phase === 'WAITING') {
@@ -158,6 +162,7 @@ export function useSocketEvents() {
     socket.on('game:phase', onGamePhase);
     socket.on('game:turn', onTurn);
     socket.on('game:showdown', onShowdown);
+    socket.on('game:action-result', onActionResult);
     socket.on('game:error', onGameError);
     socket.on('player:google-auth-success', onGoogleAuthSuccess);
     socket.on('player:google-auth-error', onGoogleAuthError);
@@ -183,6 +188,7 @@ export function useSocketEvents() {
       socket!.off('game:phase', onGamePhase);
       socket!.off('game:turn', onTurn);
       socket!.off('game:showdown', onShowdown);
+      socket!.off('game:action-result', onActionResult);
       socket!.off('game:error', onGameError);
       socket!.off('player:google-auth-success', onGoogleAuthSuccess);
       socket!.off('player:google-auth-error', onGoogleAuthError);

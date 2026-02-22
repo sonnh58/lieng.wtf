@@ -23,6 +23,7 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
   const {
     phase, myCards, pot, currentBet, currentTurn,
     turnTimeLeft, showdownResults, round, setShowdownResults,
+    playerActions,
   } = useGameStore();
   const [flipReveal, setFlipReveal] = useState(false);
   const prevCardsLen = useRef(0);
@@ -111,6 +112,7 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
                 turnTimeLeft={turnTimeLeft}
                 showCards={phase === 'SHOWDOWN' || player.id === playerId}
                 isMe={player.id === playerId}
+                lastAction={playerActions[player.id]}
               />
             </div>
           ))}

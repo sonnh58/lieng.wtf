@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Player } from '@lieng/shared';
 import { PlayerState } from '@lieng/shared';
 import { HandDisplay } from './hand-display';
-import { formatChips } from '../utils/format-chips';
+import { formatChipsFull } from '../utils/format-chips';
 
 interface PlayerSeatProps {
   player: Player;
@@ -12,10 +12,19 @@ interface PlayerSeatProps {
   showCards?: boolean;
   /** Whether this seat is the local player (cards managed by bottom panel) */
   isMe?: boolean;
+  /** Last action taken by this player */
+  lastAction?: { action: string; amount?: number };
 }
 
+const ACTION_LABELS: Record<string, { label: string; color: string }> = {
+  TO: { label: 'To', color: 'bg-green-600 text-white' },
+  THEO: { label: 'Theo', color: 'bg-blue-600 text-white' },
+  BO: { label: 'Bo', color: 'bg-red-600 text-white' },
+  TO_TAT: { label: 'All-in', color: 'bg-yellow-500 text-black' },
+};
+
 export function PlayerSeat({
-  player, isCurrentTurn, isDealer, turnTimeLeft, showCards = false, isMe = false,
+  player, isCurrentTurn, isDealer, turnTimeLeft, showCards = false, isMe = false, lastAction,
 }: PlayerSeatProps) {
   const isFolded = player.state === PlayerState.FOLDED;
   const isAllIn = player.state === PlayerState.ALL_IN;
@@ -90,13 +99,13 @@ export function PlayerSeat({
 
         {/* Chips */}
         <div className="text-[--color-gold] text-[9px] sm:text-[11px] font-bold text-center">
-          {formatChips(player.chips)}
+          {formatChipsFull(player.chips)}
         </div>
 
         {/* Bet */}
         {player.bet > 0 && (
           <div className="text-[--color-success] text-[9px] sm:text-[10px] text-center">
-            {formatChips(player.bet)}
+            {formatChipsFull(player.bet)}
           </div>
         )}
 
@@ -108,6 +117,14 @@ export function PlayerSeat({
           <div className="text-[--color-gold] text-[9px] sm:text-[10px] text-center font-bold text-glow-gold">ALL-IN</div>
         )}
       </div>
+
+      {/* Last action badge */}
+      {lastAction && ACTION_LABELS[lastAction.action] && (
+        <div className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold whitespace-nowrap shadow-md ${ACTION_LABELS[lastAction.action].color}`}>
+          {ACTION_LABELS[lastAction.action].label}
+          {lastAction.action === 'TO' && lastAction.amount != null && ` ${lastAction.amount}`}
+        </div>
+      )}
     </div>
   );
 }

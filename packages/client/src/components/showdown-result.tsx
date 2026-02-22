@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { Card } from '@lieng/shared';
 import { PlayingCard } from './playing-card';
 import { handTypeToVietnamese } from '../utils/card-display';
@@ -5,6 +6,7 @@ import { formatChipsFull } from '../utils/format-chips';
 import { getSocket } from '../socket/socket-client';
 import { useConnectionStore } from '../stores/connection-store';
 import { useRoomStore } from '../stores/room-store';
+import { Fireworks } from './fireworks';
 
 interface ShowdownResultProps {
   winners: string[];
@@ -22,6 +24,14 @@ export function ShowdownResult({ winners, hands, payouts, playerNames }: Showdow
   const isDealer = currentRoom?.hostId === playerId;
   const handleDeal = () => socket?.emit('game:start');
 
+  // Check if any winner has LIENG or SAP
+  const hasSpecialHand = useMemo(() => {
+    return winners.some((wId) => {
+      const ht = hands[wId]?.handType;
+      return ht === 'LIENG' || ht === 'SAP';
+    });
+  }, [winners, hands]);
+
   // Sort: winners first
   const sortedEntries = Object.entries(hands).sort(([a], [b]) => {
     const aWin = winners.includes(a) ? 0 : 1;
@@ -31,6 +41,7 @@ export function ShowdownResult({ winners, hands, payouts, playerNames }: Showdow
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-fade-in">
+      {hasSpecialHand && <Fireworks />}
       <div className="bg-[--color-surface] rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md safe-bottom">
         <div className="p-3 sm:p-4">
           {/* Header */}

@@ -7,6 +7,11 @@ interface ShowdownResult {
   payouts: Record<string, number>;
 }
 
+interface PlayerAction {
+  action: string;   // BettingAction value: 'TO' | 'THEO' | 'BO' | 'TO_TAT'
+  amount?: number;
+}
+
 interface GameState {
   phase: GamePhase;
   myCards: Card[];
@@ -22,6 +27,7 @@ interface GameState {
   totalLoaned: number;
   totalPnl: number;
   readyPlayers: string[];
+  playerActions: Record<string, PlayerAction>;
 
   setPhase: (phase: GamePhase) => void;
   setMyCards: (cards: Card[]) => void;
@@ -36,6 +42,8 @@ interface GameState {
   setWalletBalance: (balance: number) => void;
   setWalletStats: (stats: { walletBalance: number; totalLoaned: number; totalPnl: number }) => void;
   setReadyPlayers: (ids: string[]) => void;
+  setPlayerAction: (playerId: string, action: PlayerAction) => void;
+  clearPlayerActions: () => void;
   updateGameState: (state: Partial<GameState>) => void;
   resetGame: () => void;
 }
@@ -55,6 +63,7 @@ const initialState = {
   totalLoaned: 0,
   totalPnl: 0,
   readyPlayers: [],
+  playerActions: {},
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -73,6 +82,10 @@ export const useGameStore = create<GameState>((set) => ({
   setWalletBalance: (balance) => set({ walletBalance: balance }),
   setWalletStats: (stats) => set({ walletBalance: stats.walletBalance, totalLoaned: stats.totalLoaned, totalPnl: stats.totalPnl }),
   setReadyPlayers: (ids) => set({ readyPlayers: ids }),
+  setPlayerAction: (playerId, action) => set((prev) => ({
+    playerActions: { ...prev.playerActions, [playerId]: action },
+  })),
+  clearPlayerActions: () => set({ playerActions: {} }),
   updateGameState: (state) => set((prev) => ({ ...prev, ...state })),
   resetGame: () => set(initialState),
 }));

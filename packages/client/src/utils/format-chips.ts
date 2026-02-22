@@ -9,5 +9,5 @@ export function formatChips(amount: number): string {
 }
 
 export function formatChipsFull(amount: number): string {
-  return amount.toLocaleString('vi-VN');
+  return amount.toLocaleString('en-US');
 }
