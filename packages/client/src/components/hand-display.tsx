@@ -101,11 +101,14 @@ export function HandDisplay({ cards, faceDown = false, size = 'md', flipReveal =
         </div>
       )}
 
-      {/* Hint to tap */}
+      {/* Flip all + hint */}
       {!allRevealed && cards.length >= 3 && (
-        <div className="mt-1 text-[--color-text-muted] text-[10px] animate-pulse">
-          Nhan de lat bai
-        </div>
+        <button
+          onClick={() => setRevealed([true, true, true])}
+          className="mt-1.5 px-3 py-1 rounded-lg bg-[--color-surface-light] hover:brightness-125 active:brightness-90 border border-[--color-border] text-[--color-text] text-[10px] sm:text-xs font-semibold cursor-pointer transition-all"
+        >
+          Lat tat ca
+        </button>
       )}
     </div>
   );
