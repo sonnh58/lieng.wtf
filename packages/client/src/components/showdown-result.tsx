@@ -42,24 +42,24 @@ export function ShowdownResult({ winners, hands, payouts, playerNames }: Showdow
   return (
     <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-fade-in">
       {hasSpecialHand && <Fireworks />}
-      <div className="bg-[--color-surface] rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md safe-bottom">
-        <div className="p-3 sm:p-4">
+      <div className="bg-[--color-surface] rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md lg:max-w-2xl safe-bottom">
+        <div className="p-3 sm:p-4 lg:p-8">
           {/* Header */}
-          <h2 className="text-base font-bold text-[--color-gold] text-glow-gold text-center mb-3 tracking-wider">
+          <h2 className="text-base lg:text-2xl font-bold text-[--color-gold] text-glow-gold text-center mb-3 lg:mb-6 tracking-wider">
             KET QUA
           </h2>
 
           {/* Player rows */}
-          <div className="space-y-2">
+          <div className="space-y-2 lg:space-y-4">
             {sortedEntries.map(([pId, hand]) => {
               const isWinner = winners.includes(pId);
               return (
                 <div
                   key={pId}
-                  className={`flex items-center gap-2 p-2 rounded-lg border ${isWinner ? 'border-[--color-gold]/60 bg-[--color-gold]/5' : 'border-[--color-border] bg-[--color-bg]'}`}
+                  className={`flex items-center gap-2 lg:gap-4 p-2 lg:p-4 rounded-lg border ${isWinner ? 'border-[--color-gold]/60 bg-[--color-gold]/5' : 'border-[--color-border] bg-[--color-bg]'}`}
                 >
                   {/* Cards */}
-                  <div className="flex gap-0.5 shrink-0">
+                  <div className="flex gap-0.5 lg:gap-1.5 shrink-0 lg:scale-125 lg:origin-left">
                     {hand.cards.map((card, i) => (
                       <PlayingCard key={i} card={card} size="sm" />
                     ))}
@@ -67,17 +67,17 @@ export function ShowdownResult({ winners, hands, payouts, playerNames }: Showdow
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
-                      <span className="text-[--color-text] font-semibold text-sm truncate">
+                      <span className="text-[--color-text] font-semibold text-sm lg:text-lg truncate">
                         {playerNames[pId] || pId}
                       </span>
                     </div>
-                    <div className="text-xs text-[--color-text-muted]">
+                    <div className="text-xs lg:text-base text-[--color-text-muted]">
                       {handTypeToVietnamese(hand.handType)}{hand.points > 0 ? ` ${hand.points}đ` : ''}
                     </div>
                   </div>
                   {/* Payout */}
                   {payouts[pId] !== undefined && (
-                    <div className={`font-bold text-sm shrink-0 ${payouts[pId] > 0 ? 'text-[--color-success]' : 'text-[--color-accent]'}`}>
+                    <div className={`font-bold text-sm lg:text-xl shrink-0 ${payouts[pId] > 0 ? 'text-[--color-success]' : 'text-[--color-accent]'}`}>
                       {payouts[pId] > 0 ? '+' : ''}{formatChipsFull(payouts[pId])}
                     </div>
                   )}
@@ -87,16 +87,16 @@ export function ShowdownResult({ winners, hands, payouts, playerNames }: Showdow
           </div>
 
           {/* Action */}
-          <div className="mt-3">
+          <div className="mt-3 lg:mt-6">
             {isDealer ? (
               <button
                 onClick={handleDeal}
-                className="w-full font-bold py-2.5 rounded-lg transition-all min-h-[40px] cursor-pointer text-sm bg-[--color-success] hover:brightness-110 active:brightness-90 text-white"
+                className="w-full font-bold py-2.5 lg:py-4 rounded-lg transition-all min-h-[40px] lg:min-h-[56px] cursor-pointer text-sm lg:text-lg bg-[--color-success] hover:brightness-110 active:brightness-90 text-white"
               >
                 Chia bai
               </button>
             ) : (
-              <p className="text-center text-[--color-text-muted] text-xs py-2">
+              <p className="text-center text-[--color-text-muted] text-xs lg:text-base py-2 lg:py-3">
                 Cho {playerNames[currentRoom?.hostId ?? ''] || 'nguoi thang'} chia bai...
               </p>
             )}
