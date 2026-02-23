@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getSocket } from '../socket/socket-client';
 
-const EMOJIS = ['😂', '😭', '🔥', '💀', '🤡', '👑', '🙏', '😎'];
+const EMOJIS = ['😂', '😭', '🔥', '💀', '🤡', '👑', '🙏', '😎', '🌶️', '😡'];
 
 export function EmojiPicker() {
   const [open, setOpen] = useState(false);
