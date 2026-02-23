@@ -49,13 +49,24 @@ export function HandDisplay({ cards, faceDown = false, size = 'md', flipReveal =
 
   const allRevealed = revealed[0] && revealed[1] && revealed[2] && cards.length >= 3;
 
-  // No flip animation — render normally
+  // No flip animation — render normally with hand result
   if (!flipReveal || faceDown) {
+    const handResult = !faceDown && cards.length >= 3 ? evaluateHand(cards) : null;
     return (
-      <div className="flex gap-0.5 sm:gap-1">
-        {displayCards.slice(0, 3).map((card, i) => (
-          <PlayingCard key={i} card={card} faceDown={faceDown || !card} size={size} />
-        ))}
+      <div className="flex flex-col items-center">
+        <div className="flex gap-0.5 sm:gap-1">
+          {displayCards.slice(0, 3).map((card, i) => (
+            <PlayingCard key={i} card={card} faceDown={faceDown || !card} size={size} />
+          ))}
+        </div>
+        {handResult && (
+          <div className={`mt-1.5 text-center font-bold text-sm sm:text-base ${HAND_TYPE_COLOR[handResult.type]}`}>
+            {handResult.type === HandType.NORMAL
+              ? `${handResult.points} diem`
+              : `${HAND_TYPE_LABEL[handResult.type]}!`
+            }
+          </div>
+        )}
       </div>
     );
   }
