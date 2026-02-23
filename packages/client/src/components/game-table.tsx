@@ -29,8 +29,17 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
     playerActions,
   } = useGameStore();
   const [flipReveal, setFlipReveal] = useState(false);
+  const [autoFlip, setAutoFlip] = useState(() => localStorage.getItem('autoFlip') === '1');
   const prevCardsLen = useRef(0);
   const { entries: emojiEntries, addEmoji } = useFloatingEmoji();
+
+  const toggleAutoFlip = () => {
+    setAutoFlip((prev) => {
+      const next = !prev;
+      localStorage.setItem('autoFlip', next ? '1' : '0');
+      return next;
+    });
+  };
 
   // Listen for emoji events
   useEffect(() => {
@@ -215,13 +224,24 @@ export function GameTable({ players, dealerIndex }: GameTableProps) {
           {/* Right: my cards — takes remaining space */}
           {myCards.length > 0 && (
             <div className="flex-1 flex justify-center">
-              <HandDisplay cards={myCards} size="lg" flipReveal={flipReveal} />
+              <HandDisplay cards={myCards} size="lg" flipReveal={!autoFlip && flipReveal} />
             </div>
           )}
 
-          {/* Emoji picker */}
-          <div className="shrink-0">
+          {/* Action buttons */}
+          <div className="shrink-0 flex flex-col items-center gap-1.5">
             <EmojiPicker />
+            <button
+              onClick={toggleAutoFlip}
+              className={`w-9 h-9 rounded-full border flex items-center justify-center text-sm cursor-pointer transition-all ${
+                autoFlip
+                  ? 'bg-[--color-primary] border-[--color-primary] text-white'
+                  : 'bg-[--color-surface-light] border-[--color-border] text-[--color-text-muted] hover:brightness-125'
+              }`}
+              title={autoFlip ? 'Tu dong lat: BAT' : 'Tu dong lat: TAT'}
+            >
+              🃏
+            </button>
           </div>
         </div>
       </div>
