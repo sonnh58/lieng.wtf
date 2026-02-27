@@ -10,9 +10,11 @@ export function connectSocket(): Socket {
   const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
   socket = io(serverUrl, {
     reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionAttempts: 5,
-    transports: ['websocket', 'polling'],
+    reconnectionDelay: 300,
+    reconnectionDelayMax: 3000,
+    reconnectionAttempts: Infinity,
+    transports: ['websocket'],
+    upgrade: false,
   });
 
   socket.on('connect', () => {
