@@ -19,11 +19,18 @@ export function createDeck(): Card[] {
   return deck;
 }
 
-/** Fisher-Yates shuffle, returns new array */
+/** Cryptographically secure random integer in [0, max) */
+function secureRandomInt(max: number): number {
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  return array[0] % max;
+}
+
+/** Fisher-Yates shuffle with crypto-secure RNG, returns new array */
 export function shuffleDeck(deck: Card[]): Card[] {
   const shuffled = [...deck];
   for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = secureRandomInt(i + 1);
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
