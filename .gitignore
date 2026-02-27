@@ -6,3 +6,4 @@ dist/
 packages/server/data/*.db
 packages/server/data/*.db-wal
 packages/server/data/*.db-shm
+deploy*.sh
